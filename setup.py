@@ -16,16 +16,11 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-with open(path.join(here, 'VERSION')) as version_file:
-    version = version_file.read().strip()
-
 setup(
     name='eth-indexer',
 
-    # Versions should comply with PEP440.  For a discussion on single-sourcing
-    # the version across setup.py and the project code, see
-    # https://packaging.python.org/en/latest/single_source_version.html
-    version=version,
+    setup_requires=["setuptools_scm"],
+    use_scm_version=True,
 
     description='Indexer for the ethereum blockchain',
     long_description=long_description,

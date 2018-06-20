@@ -36,32 +36,36 @@ def hexlify(d):
     return "0x" + binascii.hexlify(d).decode()
 
 
+def insert_events(conn, events):
+    with conn.cursor() as cur:
+        for x in events:
+            cur.execute(
+                """INSERT INTO events (transactionHash,
+                                       blockNumber,
+                                       address,
+                                       eventName,
+                                       args,
+                                       blockHash,
+                                       transactionIndex,
+                                       logIndex)
+                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                (
+                    hexlify(x["log"]["transactionHash"]),
+                    x["log"]["blockNumber"],
+                    x["log"]["address"],
+                    x["name"],
+                    json.dumps(x["args"]),
+                    hexlify(x["log"]["blockHash"]),
+                    x["log"]["transactionIndex"],
+                    x["log"]["logIndex"],
+                ),
+            )
+
+
 def main():
-    conn = psycopg2.connect("")  # we rely on the PG* variables to be set
-    cur = conn.cursor()
-    for x in get_events():
-        cur.execute(
-            """INSERT INTO events (transactionHash,
-                                   blockNumber,
-                                   address,
-                                   eventName,
-                                   args,
-                                   blockHash,
-                                   transactionIndex,
-                                   logIndex)
-                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-            (
-                hexlify(x["log"]["transactionHash"]),
-                x["log"]["blockNumber"],
-                x["log"]["address"],
-                x["name"],
-                json.dumps(x["args"]),
-                hexlify(x["log"]["blockHash"]),
-                x["log"]["transactionIndex"],
-                x["log"]["logIndex"],
-            ),
-        )
-    conn.commit()
+    events = get_events()
+    with psycopg2.connect("") as conn:  # we rely on the PG* variables to be set
+        insert_events(conn, events)
 
 
 if __name__ == "__main__":

@@ -3,8 +3,9 @@
 """short demo query"""
 
 import psycopg2
+import psycopg2.extras
 
-with psycopg2.connect("") as conn:  # we rely on the PG* variables to be set
+with psycopg2.connect("", cursor_factory=psycopg2.extras.RealDictCursor) as conn:  # we rely on the PG* variables to be set
     with conn.cursor() as cur:
         cur.execute(
             "select * from events where args->>'_from' = %s order by blocknumber, transactionIndex, logIndex",

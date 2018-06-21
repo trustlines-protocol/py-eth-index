@@ -7,5 +7,6 @@ CREATE TABLE events (
   args jsonb,
   blockHash text NOT NULL,
   transactionIndex integer NOT NULL,
-  logIndex integer NOT NULL
+  logIndex integer NOT NULL,
+  timestamp integer NOT NULL
 );

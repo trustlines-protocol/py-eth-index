@@ -11,3 +11,14 @@ CREATE TABLE events (
   timestamp integer NOT NULL,
   PRIMARY KEY(transactionHash, address, blockHash, transactionIndex, logIndex)
 );
+
+CREATE TABLE sync (
+       last_block_number integer NOT NULL,
+       last_block_hash text NOT NULL,
+       addresses text[] NOT NULL
+);
+
+CREATE TABLE abis (
+       contract_address text NOT NULL PRIMARY KEY,
+       abi jsonb NOT NULL
+);

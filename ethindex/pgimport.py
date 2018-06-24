@@ -6,11 +6,19 @@ import psycopg2
 import psycopg2.extras
 import binascii
 import logging
+import click
 from ethindex import logdecode
 
 
 logger = logging.getLogger(__name__)
 # https://github.com/ethereum/wiki/wiki/JavaScript-API#web3ethgettransactionreceipt
+
+
+def topic_index_from_db(conn):
+    with conn.cursor() as cur:
+        cur.execute("select * from abis")
+        rows = cur.fetchall()
+        return logdecode.TopicIndex({r["contract_address"]: r["abi"] for r in rows})
 
 
 def get_logs(web3, addresses):
@@ -19,11 +27,7 @@ def get_logs(web3, addresses):
     )
 
 
-def get_events(web3):
-    a2abi = logdecode.build_address_to_abi_dict(
-        json.load(open("addresses.json")), json.load(open("contracts.json"))
-    )
-    topic_index = logdecode.TopicIndex(a2abi)
+def get_events(web3, topic_index):
     return [topic_index.decode_log(x) for x in get_logs(web3, topic_index.addresses)]
 
 
@@ -94,7 +98,10 @@ def main():
         Web3.HTTPProvider("http://127.0.0.1:8545", request_kwargs={"timeout": 60})
     )
 
-    events = get_events(web3)
+    with connect("") as conn:
+        topic_index = topic_index_from_db(conn)
+
+    events = get_events(web3, topic_index)
     blocknumbers = event_blocknumbers(events)
     logger.info("got %s events in %s blocks", len(events), len(blocknumbers))
     blocks = [web3.eth.getBlock(x) for x in blocknumbers]
@@ -102,6 +109,26 @@ def main():
 
     with connect("") as conn:  # we rely on the PG* variables to be set
         insert_events(conn, events)
+
+
+@click.command()
+@click.option("--addresses", default="addresses.json")
+@click.option("--contracts", default="contracts.json")
+def importabi(addresses, contracts):
+    logging.basicConfig(level=logging.INFO)
+    a2abi = logdecode.build_address_to_abi_dict(
+        json.load(open(addresses)), json.load(open(contracts))
+    )
+    logger.info("importing %s abis", len(a2abi))
+    with connect("") as conn:
+        cur = conn.cursor()
+        for contract_address, abi in a2abi.items():
+            cur.execute(
+                """INSERT INTO abis (contract_address, abi)
+                   VALUES (%s, %s)
+                   ON CONFLICT(contract_address) DO NOTHING""",
+                (contract_address, json.dumps(abi)),
+            )
 
 
 if __name__ == "__main__":

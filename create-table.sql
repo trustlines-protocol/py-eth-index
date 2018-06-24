@@ -8,5 +8,6 @@ CREATE TABLE events (
   blockHash text NOT NULL,
   transactionIndex integer NOT NULL,
   logIndex integer NOT NULL,
-  timestamp integer NOT NULL
+  timestamp integer NOT NULL,
+  PRIMARY KEY(transactionHash, address, blockHash, transactionIndex, logIndex)
 );

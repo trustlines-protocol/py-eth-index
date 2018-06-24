@@ -6,8 +6,8 @@ install:
   - pip install -c constraints.txt -r requirements.txt
 script:
   - flake8
-  - mypy --ignore-missing-imports ethidx
-#  - coverage run --source=ethidx -m py.test tests
+  - mypy --ignore-missing-imports ethindex
+#  - coverage run --source=ethindex -m py.test tests
 #after_success:
 #  - coverage report
 branches:

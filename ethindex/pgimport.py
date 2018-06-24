@@ -6,7 +6,7 @@ import psycopg2
 import psycopg2.extras
 import binascii
 import logging
-from ethidx import logdecode
+from ethindex import logdecode
 
 
 logger = logging.getLogger(__name__)

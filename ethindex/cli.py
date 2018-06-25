@@ -8,3 +8,4 @@ def cli():
 
 
 cli.add_command(ethindex.pgimport.importabi)
+cli.add_command(ethindex.pgimport.runsync)

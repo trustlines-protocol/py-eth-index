@@ -80,5 +80,4 @@ setup(
     [console_scripts]
     ethindex=ethindex.cli:cli
     """,
-
 )

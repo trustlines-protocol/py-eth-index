@@ -13,6 +13,7 @@ CREATE TABLE events (
 );
 
 CREATE TABLE sync (
+       syncid text NOT NULL PRIMARY KEY,
        last_block_number integer NOT NULL,
        last_block_hash text NOT NULL,
        addresses text[] NOT NULL

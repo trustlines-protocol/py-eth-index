@@ -18,13 +18,13 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="eth-indexer",
+    name="eth-index",
     setup_requires=["setuptools_scm"],
     use_scm_version=True,
     description="Indexer for the ethereum blockchain",
     long_description=long_description,
     # The project's main homepage.
-    url="https://github.com/trustlines-network/py-eth-indexer",
+    url="https://github.com/trustlines-network/py-eth-index",
     # Author details
     author="Trustlines-Network",
     author_email="",

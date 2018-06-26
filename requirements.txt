@@ -1,5 +1,6 @@
 pytest==3.2.5
 flake8
+black
 coverage
 mypy
 web3

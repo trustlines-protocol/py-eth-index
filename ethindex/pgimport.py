@@ -8,7 +8,7 @@ import psycopg2.extras
 import binascii
 import logging
 import click
-from ethindex import logdecode
+from ethindex import logdecode, util
 
 
 logger = logging.getLogger(__name__)
@@ -212,6 +212,7 @@ class Synchronizer:
 @click.option("--jsonrpc", help="jsonrpc URL to use", default="http://127.0.0.1:8545")
 def runsync(jsonrpc):
     logging.basicConfig(level=logging.INFO)
+    logger.info("version %s starting", util.get_version())
     web3 = Web3(
         Web3.HTTPProvider(jsonrpc, request_kwargs={"timeout": 60})
     )
@@ -227,6 +228,7 @@ def runsync(jsonrpc):
 @click.option("--contracts", default="contracts.json")
 def importabi(addresses, contracts):
     logging.basicConfig(level=logging.INFO)
+    logger.info("version %s starting", util.get_version())
     a2abi = logdecode.build_address_to_abi_dict(
         json.load(open(addresses)), json.load(open(contracts))
     )

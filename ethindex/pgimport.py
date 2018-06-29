@@ -209,10 +209,11 @@ class Synchronizer:
 
 
 @click.command()
-def runsync():
+@click.option("--jsonrpc", help="jsonrpc URL to use", default="http://127.0.0.1:8545")
+def runsync(jsonrpc):
     logging.basicConfig(level=logging.INFO)
     web3 = Web3(
-        Web3.HTTPProvider("http://127.0.0.1:8545", request_kwargs={"timeout": 60})
+        Web3.HTTPProvider(jsonrpc, request_kwargs={"timeout": 60})
     )
 
     with connect("") as conn:

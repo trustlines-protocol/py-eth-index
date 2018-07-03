@@ -175,6 +175,27 @@ class Synchronizer:
             )
             self.last_block_number = row["last_block_number"]
 
+    def _sync_blocks(self, fromBlock, toBlock):
+        events = get_events(self.web3, self.topic_index, fromBlock, toBlock)
+        blocknumbers = event_blocknumbers(events)
+        logger.info(
+            "got %s events in %s blocks (%s -> %s)",
+            len(events),
+            len(blocknumbers),
+            fromBlock,
+            toBlock,
+        )
+        blocks = [self.web3.eth.getBlock(x) for x in blocknumbers]
+        enrich_events(events, blocks)
+        insert_events(self.conn, events)
+
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """UPDATE sync SET last_block_number=%s where syncid=%s""",
+                (toBlock, self.syncid),
+            )
+        self.conn.commit()
+
     def sync_some_blocks(self):
         while 1:
             latest_block = self.web3.eth.getBlock("latest")
@@ -184,26 +205,10 @@ class Synchronizer:
             toBlock = min(
                 latest_block_number, self.last_block_number + self.blocks_per_round
             )
-            events = get_events(self.web3, self.topic_index, fromBlock, toBlock)
-            blocknumbers = event_blocknumbers(events)
-            logger.info(
-                "got %s events in %s blocks (%s -> %s)",
-                len(events),
-                len(blocknumbers),
-                fromBlock,
-                toBlock,
-            )
-            blocks = [self.web3.eth.getBlock(x) for x in blocknumbers]
-            enrich_events(events, blocks)
-            insert_events(self.conn, events)
-
-            with self.conn.cursor() as cur:
-                cur.execute(
-                    """UPDATE sync SET last_block_number=%s where syncid=%s""",
-                    (toBlock, self.syncid),
-                )
-            self.conn.commit()
-            if toBlock == self.last_block_number:
+            if fromBlock <= toBlock:
+                self._sync_blocks(fromBlock, toBlock)
+            else:
+                logger.info("already synced up to latest block %s", toBlock)
                 time.sleep(1)
 
 

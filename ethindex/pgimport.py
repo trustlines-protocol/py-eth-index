@@ -132,7 +132,7 @@ def insert_sync_entry(conn, syncid, addresses):
         cur.execute(
             """INSERT INTO SYNC (syncid, last_block_number, last_block_hash, addresses)
                VALUES (%s, %s, %s, %s)""",
-            (syncid, 0, "", list(addresses)),
+            (syncid, -1, "", list(addresses)),
         )
 
 
@@ -180,18 +180,17 @@ class Synchronizer:
             latest_block = self.web3.eth.getBlock("latest")
             latest_block_number = latest_block["number"]
             self._load_data_from_sync()
+            fromBlock = self.last_block_number + 1
             toBlock = min(
                 latest_block_number, self.last_block_number + self.blocks_per_round
             )
-            events = get_events(
-                self.web3, self.topic_index, self.last_block_number, toBlock
-            )
+            events = get_events(self.web3, self.topic_index, fromBlock, toBlock)
             blocknumbers = event_blocknumbers(events)
             logger.info(
                 "got %s events in %s blocks (%s -> %s)",
                 len(events),
                 len(blocknumbers),
-                self.last_block_number,
+                fromBlock,
                 toBlock,
             )
             blocks = [self.web3.eth.getBlock(x) for x in blocknumbers]
@@ -213,9 +212,7 @@ class Synchronizer:
 def runsync(jsonrpc):
     logging.basicConfig(level=logging.INFO)
     logger.info("version %s starting", util.get_version())
-    web3 = Web3(
-        Web3.HTTPProvider(jsonrpc, request_kwargs={"timeout": 60})
-    )
+    web3 = Web3(Web3.HTTPProvider(jsonrpc, request_kwargs={"timeout": 60}))
 
     with connect("") as conn:
         ensure_default_entry(conn)

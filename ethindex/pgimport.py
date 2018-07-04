@@ -197,8 +197,7 @@ class Synchronizer:
             )
         self.conn.commit()
 
-
-    def sync_some_blocks(self):
+    def sync_some_blocks(self, waittime):
         while 1:
             latest_block = self.web3.eth.getBlock("latest")
             latest_block_number = latest_block["number"]
@@ -211,12 +210,17 @@ class Synchronizer:
                 self._sync_blocks(fromBlock, toBlock)
             else:
                 logger.info("already synced up to latest block %s", toBlock)
-                time.sleep(1)
+                time.sleep(waittime)
 
 
 @click.command()
 @click.option("--jsonrpc", help="jsonrpc URL to use", default="http://127.0.0.1:8545")
-def runsync(jsonrpc):
+@click.option(
+    "--waittime",
+    help="time to sleep in milliseconds waiting for a new block",
+    default=1000,
+)
+def runsync(jsonrpc, waittime):
     logging.basicConfig(level=logging.INFO)
     logger.info("version %s starting", util.get_version())
 
@@ -228,9 +232,12 @@ def runsync(jsonrpc):
             with connect("") as conn:
                 ensure_default_entry(conn)
                 s = Synchronizer(conn, web3, "default")
-                s.sync_some_blocks()
+                s.sync_some_blocks(waittime * 0.001)
         except Exception as e:
-            logger.error("An error occured in runsync. Will restart runsync in 10 seconds", exc_info=sys.exc_info())
+            logger.error(
+                "An error occured in runsync. Will restart runsync in 10 seconds",
+                exc_info=sys.exc_info(),
+            )
             time.sleep(10)
 
 

@@ -47,11 +47,29 @@ current directory and adds them to the abis table. These files are the exact
 files that the relay server also reads. Their location can be specified via the
 `--addresses` and `-contracts` command line arguments.
 
+Usgae:
+```
+Usage: ethindex importabi [OPTIONS]
+
+Options:
+  --addresses TEXT
+  --contracts TEXT
+  --help            Show this message and exit.
+```
 
 ### ethindex runsync
 `ethindex runsync` will start the actual synchronization process. On the first start it will read all of the abis and create one entry in the sync table containing all contract addresses.
 It then imports all of the events into the postgres table `events`.
 
+Usage
+```
+Usage: ethindex runsync [OPTIONS]
+
+Options:
+  --jsonrpc TEXT      jsonrpc URL to use
+  --waittime INTEGER  time to sleep in milliseconds waiting for a new block
+  --help              Show this message and exit.
+```
 ## Status and Limitations
 ethindex is alpha software. 
 - ethindex currently does not handle chain reorgs

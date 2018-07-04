@@ -8,9 +8,9 @@ server component.
 Before trying to install py-eth-index, make sure you have the postgresql
 development header files and library installed. On debian based systems this can
 be done by running:
-``` 
-apt install libpq-dev 
-``` 
+```
+apt install libpq-dev
+```
 
 eth-index uses python 3.6 or up. Please make sure you have the required version
 installed.
@@ -27,7 +27,7 @@ pip install -c constraints.txt  .
 Please setup a working postgres environment, i.e. set the PG* environment
 variables and configure ~/.pgpass.
 
-Then run 
+Then run
 ```
 psql -f create-table.sql
 ```
@@ -39,7 +39,7 @@ process. It also uses the PG* variables in order to determine the postgres
 server to connect to.
 
 ### ethindex importabi
-Before importing events into the postgres database, the ABIs must be known. 
+Before importing events into the postgres database, the ABIs must be known.
 
 `ethindex importabi` can be used to import ABIs into the postgres database. By
 default it reads two json files `addresses.json` and `contracts.json` from the
@@ -71,6 +71,6 @@ Options:
   --help              Show this message and exit.
 ```
 ## Status and Limitations
-ethindex is alpha software. 
+ethindex is alpha software.
 - ethindex currently does not handle chain reorgs
 - there currently is no way to add more contracts to index

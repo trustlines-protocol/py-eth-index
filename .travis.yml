@@ -2,12 +2,14 @@ language: python
 python:
   - "3.6"
 install:
-  - pip install -c constraints.txt -e .
+# install from requirements first, because that installs the non-binary psycopg2
   - pip install -c constraints.txt -r requirements.txt
+  - pip install -c constraints.txt -e .
 script:
   - flake8
-  - mypy --ignore-missing-imports ethidx
-#  - coverage run --source=ethidx -m py.test tests
+  - black --check print-logs run-query setup.py ethindex
+  - mypy --ignore-missing-imports ethindex
+#  - coverage run --source=ethindex -m py.test tests
 #after_success:
 #  - coverage report
 branches:

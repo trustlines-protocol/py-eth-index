@@ -1,0 +1,27 @@
+#! /usr/bin/env python3
+
+import json
+from web3 import Web3
+from ethindex import logdecode
+
+
+def main():
+    a2abi = logdecode.build_address_to_abi_dict(
+        json.load(open("addresses.json")), json.load(open("contracts.json"))
+    )
+    topic_index = logdecode.TopicIndex(a2abi)
+
+    web3 = Web3(
+        Web3.HTTPProvider("http://127.0.0.1:8545", request_kwargs={"timeout": 60})
+    )
+
+    logs = web3.eth.getLogs(
+        {"fromBlock": "0x100", "toBlock": "latest", "address": topic_index.addresses}
+    )
+
+    for x in logs:
+        print(topic_index.decode_log(x))
+
+
+if __name__ == "__main__":
+    main()

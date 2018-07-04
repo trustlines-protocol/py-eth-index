@@ -18,13 +18,13 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="eth-indexer",
+    name="eth-index",
     setup_requires=["setuptools_scm"],
     use_scm_version=True,
     description="Indexer for the ethereum blockchain",
     long_description=long_description,
     # The project's main homepage.
-    url="https://github.com/trustlines-network/py-eth-indexer",
+    url="https://github.com/trustlines-network/py-eth-index",
     # Author details
     author="Trustlines-Network",
     author_email="",
@@ -60,7 +60,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=[],
+    install_requires=["web3", "psycopg2", "click"],
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
@@ -76,4 +76,8 @@ setup(
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files # noqa
     # In this case, 'data_file' will be installed into '<sys.prefix>/my_data'
     data_files=[],
+    entry_points="""
+    [console_scripts]
+    ethindex=ethindex.cli:cli
+    """,
 )

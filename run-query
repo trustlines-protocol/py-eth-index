@@ -1,0 +1,19 @@
+#! /usr/bin/env python
+
+"""short demo query"""
+
+import psycopg2
+import psycopg2.extras
+
+with psycopg2.connect(
+    "", cursor_factory=psycopg2.extras.RealDictCursor
+) as conn:  # we rely on the PG* variables to be set
+    with conn.cursor() as cur:
+        cur.execute(
+            "select * from events where args->>'_from' = %s order by blocknumber, transactionIndex, logIndex",
+            ("0x1efb2a9ec48c10de786c837699129073f4a4429a",),
+        )
+        rows = cur.fetchall()
+
+for x in rows:
+    print(x)

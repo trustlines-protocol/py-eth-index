@@ -1,5 +1,6 @@
 """import ethereum events into postgres
 """
+import sys
 import json
 import time
 from web3 import Web3
@@ -196,6 +197,7 @@ class Synchronizer:
             )
         self.conn.commit()
 
+
     def sync_some_blocks(self):
         while 1:
             latest_block = self.web3.eth.getBlock("latest")
@@ -217,12 +219,19 @@ class Synchronizer:
 def runsync(jsonrpc):
     logging.basicConfig(level=logging.INFO)
     logger.info("version %s starting", util.get_version())
-    web3 = Web3(Web3.HTTPProvider(jsonrpc, request_kwargs={"timeout": 60}))
 
-    with connect("") as conn:
-        ensure_default_entry(conn)
-        s = Synchronizer(conn, web3, "default")
-        s.sync_some_blocks()
+    # we like to survive a postgresql restart, so we need to catch errors here,
+    # since we must create a new connection in that case.
+    while 1:
+        try:
+            web3 = Web3(Web3.HTTPProvider(jsonrpc, request_kwargs={"timeout": 60}))
+            with connect("") as conn:
+                ensure_default_entry(conn)
+                s = Synchronizer(conn, web3, "default")
+                s.sync_some_blocks()
+        except Exception as e:
+            logger.error("An error occured in runsync. Will restart runsync in 10 seconds", exc_info=sys.exc_info())
+            time.sleep(10)
 
 
 @click.command()

@@ -10,6 +10,16 @@ import hexbytes
 import eth_abi
 import itertools
 import eth_utils
+from typing import List, Any
+
+
+def replace_with_checksum_address(values: List[Any], types: List[str]) -> List[Any]:
+    """returns a new list of values with addresses replaced with their checksum
+    address """
+    return [
+        eth_utils.to_checksum_address(value) if _type == "address" else value
+        for (value, _type) in zip(values, types)
+    ]
 
 
 def build_address_to_abi_dict(addresses_json, compiled_contracts):
@@ -40,7 +50,7 @@ def decode_non_indexed_inputs(abi, log):
     names = [x["name"] for x in inputs]
     data = hexbytes.HexBytes(log["data"])
     values = eth_abi.decode_abi(types, data)
-    return zip(names, values)
+    return zip(names, replace_with_checksum_address(values, types))
 
 
 def decode_indexed_inputs(abi, log):
@@ -51,8 +61,7 @@ def decode_indexed_inputs(abi, log):
     types = [x["type"] for x in inputs]
     names = [x["name"] for x in inputs]
     values = [eth_abi.decode_single(t, v) for t, v in zip(types, log["topics"][1:])]
-
-    return zip(names, values)
+    return zip(names, replace_with_checksum_address(values, types))
 
 
 def filter_events(abi):

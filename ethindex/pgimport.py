@@ -234,3 +234,39 @@ def importabi(addresses, contracts):
                    ON CONFLICT(contract_address) DO NOTHING""",
                 (contract_address, json.dumps(abi)),
             )
+
+
+@click.command()
+def createtables():
+    logging.basicConfig(level=logging.INFO)
+    logger.info("version %s starting", util.get_version())
+    logger.info("creating tables")
+    with connect("") as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            CREATE TABLE events (
+             transactionHash TEXT NOT NULL,
+                 blockNumber INTEGER NOT NULL,
+                 address TEXT NOT NULL,
+                 eventName TEXT NOT NULL,
+                 args JSONB,
+                 blockHash TEXT NOT NULL,
+                 transactionIndex INTEGER NOT NULL,
+                 logIndex INTEGER NOT NULL,
+                 timestamp INTEGER NOT NULL,
+                 PRIMARY KEY(transactionHash, address, blockHash, transactionIndex, logIndex)
+               );
+
+              CREATE TABLE sync (
+                syncid TEXT NOT NULL PRIMARY KEY,
+                last_block_number INTEGER NOT NULL,
+                last_block_hash TEXT NOT NULL,
+                addresses TEXT[] NOT NULL
+              );
+
+              CREATE TABLE abis (
+                contract_address TEXT NOT NULL PRIMARY KEY,
+                abi JSONB NOT NULL
+              );"""
+        )

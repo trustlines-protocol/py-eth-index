@@ -8,7 +8,6 @@ black
 coverage
 flake8
 flake8-invalid-escape-sequences
-flake8-pep3101
 flake8-string-format
 mypy
 pytest==3.2.5

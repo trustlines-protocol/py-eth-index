@@ -119,7 +119,7 @@ class TopicIndex:
     def decode_log(self, log):
         abi = self.get_abi_for_log(log)
         if abi is None:
-            return None
+            raise RuntimeError("Could not find ABI for log %s", log)
 
         args = dict(
             itertools.chain(

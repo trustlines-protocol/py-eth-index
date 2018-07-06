@@ -107,25 +107,6 @@ def enrich_events(events, blocks):
         e["timestamp"] = block["timestamp"]
 
 
-def main():
-    logging.basicConfig(level=logging.INFO)
-    web3 = Web3(
-        Web3.HTTPProvider("http://127.0.0.1:8545", request_kwargs={"timeout": 60})
-    )
-
-    with connect("") as conn:
-        topic_index = topic_index_from_db(conn)
-
-    events = get_events(web3, topic_index, 0, "latest")
-    blocknumbers = event_blocknumbers(events)
-    logger.info("got %s events in %s blocks", len(events), len(blocknumbers))
-    blocks = [web3.eth.getBlock(x) for x in blocknumbers]
-    enrich_events(events, blocks)
-
-    with connect("") as conn:  # we rely on the PG* variables to be set
-        insert_events(conn, events)
-
-
 def insert_sync_entry(conn, syncid, addresses):
     """make sure we have at least one entry in the sync table"""
 
@@ -260,7 +241,3 @@ def importabi(addresses, contracts):
                    ON CONFLICT(contract_address) DO NOTHING""",
                 (contract_address, json.dumps(abi)),
             )
-
-
-if __name__ == "__main__":
-    main()

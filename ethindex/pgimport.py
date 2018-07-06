@@ -50,16 +50,6 @@ def hexlify(d):
     return "0x" + binascii.hexlify(d).decode()
 
 
-def insert_blocks(conn, blocks):
-    with conn.cursor() as cur:
-        for b in blocks:
-            cur.execute(
-                """INSERT INTO blocks (blockNumber, blockHash, timestamp)
-                           VALUES (%s, %s, %s)""",
-                (b["number"], hexlify(b["hash"]), b["timestamp"]),
-            )
-
-
 def insert_events(conn, events):
     with conn.cursor() as cur:
         for x in events:

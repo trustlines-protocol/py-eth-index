@@ -10,7 +10,8 @@ import hexbytes
 import eth_abi
 import itertools
 import eth_utils
-from typing import List, Any
+import attr
+from typing import List, Any, Dict
 
 
 def replace_with_checksum_address(values: List[Any], types: List[str]) -> List[Any]:
@@ -68,6 +69,38 @@ def filter_events(abi):
     return [x for x in abi if x["type"] == "event"]
 
 
+@attr.s(auto_attribs=True)
+class Event:
+    name: str
+    args: Dict
+    log: Dict
+    timestamp: int
+
+    @property
+    def blocknumber(self):
+        return self.log["blockNumber"]
+
+    @property
+    def blockhash(self):
+        return self.log["blockHash"]
+
+    @property
+    def transactionhash(self):
+        return self.log["transactionHash"]
+
+    @property
+    def address(self):
+        return self.log["address"]
+
+    @property
+    def transactionindex(self):
+        return self.log["transactionIndex"]
+
+    @property
+    def logindex(self):
+        return self.log["logIndex"]
+
+
 class TopicIndex:
     def __init__(self, address2abi):
         """build a TopicIndex from an contract address to ABI dict"""
@@ -93,5 +126,4 @@ class TopicIndex:
                 decode_non_indexed_inputs(abi, log), decode_indexed_inputs(abi, log)
             )
         )
-
-        return {"name": abi["name"], "args": args, "log": log}
+        return Event(name=abi["name"], args=args, log=log, timestamp=None)

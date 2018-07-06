@@ -10,7 +10,7 @@ import binascii
 import logging
 import click
 from ethindex import logdecode, util
-
+from typing import Iterable
 
 logger = logging.getLogger(__name__)
 # https://github.com/ethereum/wiki/wiki/JavaScript-API#web3ethgettransactionreceipt
@@ -50,11 +50,9 @@ def hexlify(d):
     return "0x" + binascii.hexlify(d).decode()
 
 
-def insert_events(conn, events):
-    with conn.cursor() as cur:
-        for x in events:
-            cur.execute(
-                """INSERT INTO events (transactionHash,
+def insert_event(cur, event: logdecode.Event) -> None:
+    cur.execute(
+        """INSERT INTO events (transactionHash,
                                        blockNumber,
                                        address,
                                        eventName,
@@ -64,23 +62,29 @@ def insert_events(conn, events):
                                        logIndex,
                                        timestamp)
                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                (
-                    hexlify(x["log"]["transactionHash"]),
-                    x["log"]["blockNumber"],
-                    x["log"]["address"],
-                    x["name"],
-                    json.dumps(x["args"]),
-                    hexlify(x["log"]["blockHash"]),
-                    x["log"]["transactionIndex"],
-                    x["log"]["logIndex"],
-                    x["timestamp"],
-                ),
-            )
+        (
+            hexlify(event.transactionhash),
+            event.blocknumber,
+            event.address,
+            event.name,
+            json.dumps(event.args),
+            hexlify(event.blockhash),
+            event.transactionindex,
+            event.logindex,
+            event.timestamp,
+        ),
+    )
+
+
+def insert_events(conn, events: Iterable[logdecode.Event]) -> None:
+    with conn.cursor() as cur:
+        for event in events:
+            insert_event(cur, event)
 
 
 def event_blocknumbers(events):
     """given a list of events returns the block numbers containing events"""
-    return {ev["log"]["blockNumber"] for ev in events}
+    return {ev.blocknumber for ev in events}
 
 
 def connect(dsn):
@@ -90,11 +94,10 @@ def connect(dsn):
 def enrich_events(events, blocks):
     block_by_number = {b["number"]: b for b in blocks}
     for e in events:
-        blocknumber = e["log"]["blockNumber"]
-        block = block_by_number[blocknumber]
-        if block["hash"] != e["log"]["blockHash"]:
+        block = block_by_number[e.blocknumber]
+        if block["hash"] != e.blockhash:
             raise RuntimeError("bad hash! chain reorg?")
-        e["timestamp"] = block["timestamp"]
+        e.timestamp = block["timestamp"]
 
 
 def insert_sync_entry(conn, syncid, addresses):

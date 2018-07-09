@@ -11,7 +11,7 @@ import eth_abi
 import itertools
 import eth_utils
 import attr
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Optional
 
 
 def replace_with_checksum_address(values: List[Any], types: List[str]) -> List[Any]:
@@ -23,7 +23,7 @@ def replace_with_checksum_address(values: List[Any], types: List[str]) -> List[A
     ]
 
 
-def build_address_to_abi_dict(addresses_json, compiled_contracts):
+def build_address_to_abi_dict(addresses_json: Dict[str, Any], compiled_contracts: Dict) -> Dict[str, Dict]:
     """build a contract-address to abi mapping from addresses.json and the contracts.json
 
     This function doesn't read the json files, but instead expects the decoded
@@ -31,8 +31,8 @@ def build_address_to_abi_dict(addresses_json, compiled_contracts):
     """
     res = {}
 
-    def add_abi(a, n):
-        res[eth_utils.to_checksum_address(a)] = compiled_contracts[n]["abi"]
+    def add_abi(contract_address, contract_name):
+        res[eth_utils.to_checksum_address(contract_address)] = compiled_contracts[contract_name]["abi"]
 
     for network in addresses_json["networks"]:
         add_abi(network, "CurrencyNetwork")
@@ -46,9 +46,9 @@ def decode_non_indexed_inputs(abi, log):
     """decode non-indexed inputs from a log entry
 
     This one decodes the values stored in the 'data' field."""
-    inputs = [x for x in abi["inputs"] if not x["indexed"]]
-    types = [x["type"] for x in inputs]
-    names = [x["name"] for x in inputs]
+    inputs = [input_ for input_ in abi["inputs"] if not input_["indexed"]]
+    types = [input_["type"] for input_ in inputs]
+    names = [input_["name"] for input_ in inputs]
     data = hexbytes.HexBytes(log["data"])
     values = eth_abi.decode_abi(types, data)
     return zip(names, replace_with_checksum_address(values, types))
@@ -58,15 +58,15 @@ def decode_indexed_inputs(abi, log):
     """decode indexed inputs from a log entry
 
     This one decodes the values stored in in topics fields (without topic 0)"""
-    inputs = [x for x in abi["inputs"] if x["indexed"]]
-    types = [x["type"] for x in inputs]
-    names = [x["name"] for x in inputs]
-    values = [eth_abi.decode_single(t, v) for t, v in zip(types, log["topics"][1:])]
+    inputs = [input_ for input_ in abi["inputs"] if input_["indexed"]]
+    types = [input_["type"] for input_ in inputs]
+    names = [input_["name"] for input_ in inputs]
+    values = [eth_abi.decode_single(type_, value) for type_, value in zip(types, log["topics"][1:])]
     return zip(names, replace_with_checksum_address(values, types))
 
 
-def filter_events(abi):
-    return [x for x in abi if x["type"] == "event"]
+def get_event_abis(abi):
+    return [some_abi for some_abi in abi if some_abi["type"] == "event"]
 
 
 @attr.s(auto_attribs=True)
@@ -74,7 +74,7 @@ class Event:
     name: str
     args: Dict
     log: Dict
-    timestamp: int
+    timestamp: Optional[int]
 
     @property
     def blocknumber(self):
@@ -107,16 +107,16 @@ class TopicIndex:
         self.addresses = list(address2abi.keys())
         self.address2abi = address2abi
         self.address_topic2event_abi = {}
-        for a, abi in self.address2abi.items():
-            for evabi in filter_events(abi):
+        for address, abi in self.address2abi.items():
+            for event_abi in get_event_abis(abi):
                 self.address_topic2event_abi[
-                    (a, hexbytes.HexBytes(eth_utils.event_abi_to_log_topic(evabi)))
-                ] = evabi
+                    (address, hexbytes.HexBytes(eth_utils.event_abi_to_log_topic(event_abi)))
+                ] = event_abi
 
     def get_abi_for_log(self, log):
         return self.address_topic2event_abi.get((log["address"], log["topics"][0]))
 
-    def decode_log(self, log):
+    def decode_log(self, log) -> Event:
         abi = self.get_abi_for_log(log)
         if abi is None:
             raise RuntimeError("Could not find ABI for log %s", log)

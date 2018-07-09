@@ -39,7 +39,7 @@ def get_logs(web3, addresses, fromBlock, toBlock):
     )
 
 
-def get_events(web3, topic_index, fromBlock, toBlock):
+def get_events(web3, topic_index, fromBlock, toBlock) -> Iterable[logdecode.Event]:
     return [
         topic_index.decode_log(x)
         for x in get_logs(web3, topic_index.addresses, fromBlock, toBlock)
@@ -91,7 +91,7 @@ def connect(dsn):
     return psycopg2.connect(dsn, cursor_factory=psycopg2.extras.RealDictCursor)
 
 
-def enrich_events(events, blocks):
+def enrich_events(events: Iterable[logdecode.Event], blocks) -> None:
     block_by_number = {b["number"]: b for b in blocks}
     for e in events:
         block = block_by_number[e.blocknumber]

@@ -23,7 +23,9 @@ def replace_with_checksum_address(values: List[Any], types: List[str]) -> List[A
     ]
 
 
-def build_address_to_abi_dict(addresses_json: Dict[str, Any], compiled_contracts: Dict) -> Dict[str, Dict]:
+def build_address_to_abi_dict(
+    addresses_json: Dict[str, Any], compiled_contracts: Dict
+) -> Dict[str, Dict]:
     """build a contract-address to abi mapping from addresses.json and the contracts.json
 
     This function doesn't read the json files, but instead expects the decoded
@@ -32,7 +34,9 @@ def build_address_to_abi_dict(addresses_json: Dict[str, Any], compiled_contracts
     res = {}
 
     def add_abi(contract_address, contract_name):
-        res[eth_utils.to_checksum_address(contract_address)] = compiled_contracts[contract_name]["abi"]
+        res[eth_utils.to_checksum_address(contract_address)] = compiled_contracts[
+            contract_name
+        ]["abi"]
 
     for network in addresses_json["networks"]:
         add_abi(network, "CurrencyNetwork")
@@ -61,7 +65,10 @@ def decode_indexed_inputs(abi, log):
     inputs = [input_ for input_ in abi["inputs"] if input_["indexed"]]
     types = [input_["type"] for input_ in inputs]
     names = [input_["name"] for input_ in inputs]
-    values = [eth_abi.decode_single(type_, value) for type_, value in zip(types, log["topics"][1:])]
+    values = [
+        eth_abi.decode_single(type_, value)
+        for type_, value in zip(types, log["topics"][1:])
+    ]
     return zip(names, replace_with_checksum_address(values, types))
 
 
@@ -110,7 +117,10 @@ class TopicIndex:
         for address, abi in self.address2abi.items():
             for event_abi in get_event_abis(abi):
                 self.address_topic2event_abi[
-                    (address, hexbytes.HexBytes(eth_utils.event_abi_to_log_topic(event_abi)))
+                    (
+                        address,
+                        hexbytes.HexBytes(eth_utils.event_abi_to_log_topic(event_abi)),
+                    )
                 ] = event_abi
 
     def get_abi_for_log(self, log):

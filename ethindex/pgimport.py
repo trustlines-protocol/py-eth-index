@@ -100,18 +100,18 @@ def enrich_events(events: Iterable[logdecode.Event], blocks) -> None:
         e.timestamp = block["timestamp"]
 
 
-def insert_sync_entry(conn, syncid, addresses):
+def insert_sync_entry(conn, syncid, addresses, start_block=-1):
     """make sure we have at least one entry in the sync table"""
 
     with conn.cursor() as cur:
         cur.execute(
             """INSERT INTO SYNC (syncid, last_block_number, last_block_hash, addresses)
                VALUES (%s, %s, %s, %s)""",
-            (syncid, -1, "", list(addresses)),
+            (syncid, start_block, "", list(addresses)),
         )
 
 
-def ensure_default_entry(conn):
+def ensure_default_entry(conn, start_block=-1):
     with conn.cursor() as cur:
         cur.execute("""select * from sync where syncid=%s""", ("default",))
         if cur.fetchall():
@@ -123,7 +123,7 @@ def ensure_default_entry(conn):
             raise RuntimeError(
                 "No ABIs found. Please add some ABIs first with 'ethindex importabi'"
             )
-        insert_sync_entry(conn, "default", addresses)
+        insert_sync_entry(conn, "default", addresses, start_block=start_block)
 
 
 class Synchronizer:
@@ -194,7 +194,10 @@ class Synchronizer:
     help="time to sleep in milliseconds waiting for a new block",
     default=1000,
 )
-def runsync(jsonrpc, waittime):
+@click.option(
+    "--startblock", help="Block from where events should be synced", default=-1
+)
+def runsync(jsonrpc, waittime, startblock):
     logging.basicConfig(level=logging.INFO)
     logger.info("version %s starting", util.get_version())
 

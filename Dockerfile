@@ -13,6 +13,17 @@ RUN python3 -m venv /opt/ethindex
 RUN /opt/ethindex/bin/pip install --disable-pip-version-check pip==10.0.1
 
 ADD . /py-eth-index
+
+# We need a non-shallow git checkout for setuptools_scm to work. Building with
+# something like
+#
+#   docker build 'https://github.com/trustlines-network/py-eth-index.git#develop' -t ethindex
+#
+# will only get us a non-shallow git clone. We try to unshallow from the public
+# repo with the next command.
+RUN sh -c 'cd /py-eth-index; git fetch --tags --unshallow https://github.com/trustlines-network/py-eth-index 2> /dev/null || true'
+
+
 RUN /opt/ethindex/bin/pip install --disable-pip-version-check -c /py-eth-index/constraints.txt --no-binary=psycopg2 /py-eth-index
 
 # copy the contents of the virtualenv from the intermediate container

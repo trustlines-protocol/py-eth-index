@@ -7,17 +7,33 @@
 #
 #   docker build . -t ethindex
 
-FROM python:3.6.5-stretch as intermediate
+FROM ubuntu:18.04 as ubuntu-python
+# python needs LANG
+ENV LANG C.UTF-8
+RUN apt-get -y update \
+    && apt-get dist-upgrade -y \
+    && apt-get install -y --no-install-recommends python3 python3-distutils libpq5
+
+FROM ubuntu-python as builder
+RUN apt-get install -y --no-install-recommends python3-dev python3-venv git build-essential libpq-dev
 
 RUN python3 -m venv /opt/ethindex
-RUN /opt/ethindex/bin/pip install --disable-pip-version-check pip==10.0.1
+RUN /opt/ethindex/bin/pip install --disable-pip-version-check pip==18.0
 
-ADD . /py-eth-index
+COPY ./constraints.txt /py-eth-index/constraints.txt
+COPY ./requirements.txt /py-eth-index/requirements.txt
+# remove development dependencies from the end of the file
+RUN sed -i -e '/development dependencies/q' /py-eth-index/requirements.txt
+
+RUN /opt/ethindex/bin/pip install --disable-pip-version-check -c /py-eth-index/constraints.txt -r /py-eth-index/requirements.txt
+
+COPY . /py-eth-index
 RUN /opt/ethindex/bin/pip install --disable-pip-version-check -c /py-eth-index/constraints.txt --no-binary=psycopg2 /py-eth-index
 
 # copy the contents of the virtualenv from the intermediate container
-FROM python:3.6.5-stretch
+FROM ubuntu-python
+RUN rm -rf /var/lib/apt/lists/*
 WORKDIR /opt/ethindex
-COPY --from=intermediate /opt/ethindex /opt/ethindex
+COPY --from=builder /opt/ethindex /opt/ethindex
 RUN ln -s /opt/ethindex/bin/ethindex /usr/local/bin/
 CMD ["/opt/ethindex/bin/ethindex"]

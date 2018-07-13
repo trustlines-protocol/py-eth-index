@@ -2,7 +2,6 @@ psycopg2>=2.7,<2.8 --no-binary psycopg2
 web3
 click
 attrs
-
 # --- development dependencies, i.e. dependencies not needed for running ethindex
 black
 coverage
@@ -10,4 +9,4 @@ flake8
 flake8-invalid-escape-sequences
 flake8-string-format
 mypy
-pytest==3.2.5
+pytest

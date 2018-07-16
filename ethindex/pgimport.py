@@ -50,7 +50,15 @@ def hexlify(d):
     return "0x" + binascii.hexlify(d).decode()
 
 
+def bytesArgsToHex(args):
+    for key in args:
+        if type(args[key]) is bytes:
+            args[key] = hexlify(args[key])
+    return args
+
+
 def insert_event(cur, event: logdecode.Event) -> None:
+    event.args = bytesArgsToHex(event.args)
     cur.execute(
         """INSERT INTO events (transactionHash,
                                        blockNumber,

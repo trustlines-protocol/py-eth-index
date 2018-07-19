@@ -162,9 +162,10 @@ class Synchronizer:
         events = get_events(self.web3, self.topic_index, fromBlock, toBlock)
         blocknumbers = event_blocknumbers(events)
         logger.info(
-            "got %s events in %s blocks (%s -> %s)",
+            "got %s events in %s out of %s blocks (%s -> %s)",
             len(events),
             len(blocknumbers),
+            toBlock - fromBlock + 1,
             fromBlock,
             toBlock,
         )

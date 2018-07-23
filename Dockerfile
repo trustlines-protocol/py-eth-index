@@ -19,4 +19,5 @@ RUN /opt/ethindex/bin/pip install --disable-pip-version-check -c /py-eth-index/c
 FROM python:3.6.5-stretch
 WORKDIR /opt/ethindex
 COPY --from=intermediate /opt/ethindex /opt/ethindex
+RUN ln -s /opt/ethindex/bin/ethindex /usr/local/bin/
 CMD ["/opt/ethindex/bin/ethindex"]

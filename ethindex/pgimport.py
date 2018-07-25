@@ -13,6 +13,8 @@ from ethindex import logdecode, util
 from typing import Iterable
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 # https://github.com/ethereum/wiki/wiki/JavaScript-API#web3ethgettransactionreceipt
 
 
@@ -136,6 +138,7 @@ def ensure_default_entry(conn, start_block=-1):
 
 class Synchronizer:
     blocks_per_round = 50000
+    number_of_confirmations_required = 10
 
     def __init__(self, conn, web3, syncid):
         self.conn = conn
@@ -158,8 +161,69 @@ class Synchronizer:
             )
             self.last_block_number = row["last_block_number"]
 
-    def _sync_blocks(self, fromBlock, toBlock):
+    def _schedule(self, fromBlock, toBlock):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO scheduled_get_logs (syncid, from_block, to_block)
+                VALUES (%s, %s, %s)""",
+                (self.syncid, fromBlock, toBlock),
+            )
+
+    def _check_finality_or_schedule(self, fromBlock, toBlock, latest_block_before):
+        """Unfortunately there is no way to determine which state the
+        blockchain was in when we call eth.getLogs. We can ask for the latest
+        block before and after we have called getLogs. The problem is, that the
+        chain may have jumped back and forth to a different chain, e.g.
+
+        the chain looks like:
+
+        ..., A999, A1000
+
+        when we ask for the latest block.
+
+        then there's a chain reorg and the chain looks like
+
+        ..., A999, B1000, B1001
+
+        Now we ask for logs of block 1000, and get the logs from Block B1000
+
+        Now, there might be another chain reorg back to the original chain:
+
+        ..., A999, A1000, A1001, A1002
+
+        We ask for the latest block and have no way to detect the chain reorg!
+
+        Though there is still some hope:
+        If the latest block number has moved no more than one block, we will be
+        able to detect the reorg if it happened!
+
+        This method records that a call to getLogs has to be made if we can't
+        rule out that a chain reorg might have happened. This will be called
+        when the latest block has moved to fromBlock +
+        self.number_of_confirmations_required
+        """
+        before_number = latest_block_before["number"]
+        if toBlock < before_number - self.number_of_confirmations_required:
+            logger.debug(
+                "%s -> %s latest=%s already final", fromBlock, toBlock, before_number
+            )
+            return
+
+        latest_block = self.web3.eth.getBlock("latest")
+        if latest_block["number"] in (
+            before_number,
+            before_number + 1,
+        ):  # XXX check parent hash
+            logger.debug("not enough new blocks -> no-reorg")
+            return
+
+        logger.info("scheduled getEvents call %s->%s", fromBlock, toBlock)
+        self._schedule(fromBlock, toBlock)
+
+    def _sync_blocks(self, fromBlock, toBlock, latest_block_before):
         events = get_events(self.web3, self.topic_index, fromBlock, toBlock)
+        self._check_finality_or_schedule(fromBlock, toBlock, latest_block_before)
         blocknumbers = event_blocknumbers(events)
         logger.info(
             "got %s events in %s out of %s blocks (%s -> %s)",
@@ -190,7 +254,7 @@ class Synchronizer:
                 latest_block_number, self.last_block_number + self.blocks_per_round
             )
             if fromBlock <= toBlock:
-                self._sync_blocks(fromBlock, toBlock)
+                self._sync_blocks(fromBlock, toBlock, latest_block)
             else:
                 logger.info("already synced up to latest block %s", toBlock)
                 time.sleep(waittime)
@@ -258,7 +322,7 @@ def createtables():
         cur.execute(
             """
             CREATE TABLE events (
-             transactionHash TEXT NOT NULL,
+                 transactionHash TEXT NOT NULL,
                  blockNumber INTEGER NOT NULL,
                  address TEXT NOT NULL,
                  eventName TEXT NOT NULL,
@@ -280,5 +344,12 @@ def createtables():
               CREATE TABLE abis (
                 contract_address TEXT NOT NULL PRIMARY KEY,
                 abi JSONB NOT NULL
-              );"""
+              );
+
+              CREATE TABLE scheduled_get_logs (
+                syncid TEXT NOT NULL,
+                from_block integer,
+                to_block integer
+              );
+            """
         )

@@ -204,22 +204,26 @@ class Synchronizer:
         self.number_of_confirmations_required
         """
         before_number = latest_block_before["number"]
-        if toBlock < before_number - self.number_of_confirmations_required:
+        # everything before this finality_barrier is considered final
+        finality_barrier = before_number - self.number_of_confirmations_required
+        if toBlock < finality_barrier:
             logger.debug(
                 "%s -> %s latest=%s already final", fromBlock, toBlock, before_number
             )
             return
 
+        # let's see if the chain has new blocks and there is the possibility of
+        # a reorg
         latest_block = self.web3.eth.getBlock("latest")
         if latest_block["number"] in (
             before_number,
             before_number + 1,
         ):  # XXX check parent hash
-            logger.debug("not enough new blocks -> no-reorg")
+            logger.debug("chain has not moved far enough to have a reorg")
             return
 
         logger.info("scheduled getEvents call %s->%s", fromBlock, toBlock)
-        self._schedule(fromBlock, toBlock)
+        self._schedule(max(finality_barrier, fromBlock), toBlock)
 
     def _sync_blocks(self, fromBlock, toBlock, latest_block_before):
         events = get_events(self.web3, self.topic_index, fromBlock, toBlock)

@@ -246,20 +246,75 @@ class Synchronizer:
                 """UPDATE sync SET last_block_number=%s where syncid=%s""",
                 (toBlock, self.syncid),
             )
-        self.conn.commit()
+
+    def _resync_blocks(self, fromBlock, toBlock):
+        events = get_events(self.web3, self.topic_index, fromBlock, toBlock)
+        blocknumbers = event_blocknumbers(events)
+        logger.info(
+            "resyncing %s events in %s out of %s blocks (%s -> %s)",
+            len(events),
+            len(blocknumbers),
+            toBlock - fromBlock + 1,
+            fromBlock,
+            toBlock,
+        )
+        blocks = [self.web3.eth.getBlock(x) for x in blocknumbers]
+        enrich_events(events, blocks)
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """DELETE FROM events
+                           WHERE blocknumber>=%s AND blocknumber<=%s
+                           AND address in %s""",
+                (fromBlock, toBlock, tuple(self.topic_index.addresses)),
+            )
+        insert_events(self.conn, events)
+
+    def _find_scheduled_getLogs(self, latest_block_number):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """select from_block, to_block from scheduled_get_logs
+                           where syncid=%s and to_block<%s
+                           order by from_block""",
+                (
+                    self.syncid,
+                    latest_block_number - self.number_of_confirmations_required,
+                ),
+            )
+            return cur.fetchall()
+
+    def _delete_scheduled_get_logs(self, from_block, to_block):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """DELETE FROM scheduled_get_logs
+                           WHERE syncid=%s AND from_block>=%s AND to_block<=%s""",
+                (self.syncid, from_block, to_block),
+            )
+
+    def _run_scheduled_getLogs(self, latest_block_number):
+        for row in self._find_scheduled_getLogs(latest_block_number):
+            # XXX we could minimize the number of calls by merging adjacent intervalls
+            from_block = row["from_block"]
+            to_block = row["to_block"]
+            self._resync_blocks(from_block, to_block)
+            self._delete_scheduled_get_logs(from_block, to_block)
 
     def sync_some_blocks(self, waittime):
         while 1:
             latest_block = self.web3.eth.getBlock("latest")
             latest_block_number = latest_block["number"]
             self._load_data_from_sync()
+            self._run_scheduled_getLogs(latest_block_number)
             fromBlock = self.last_block_number + 1
             toBlock = min(
                 latest_block_number, self.last_block_number + self.blocks_per_round
             )
+
             if fromBlock <= toBlock:
                 self._sync_blocks(fromBlock, toBlock, latest_block)
-            else:
+
+            self.conn.commit()
+
+            if not fromBlock <= toBlock:
                 logger.info("already synced up to latest block %s", toBlock)
                 time.sleep(waittime)
 

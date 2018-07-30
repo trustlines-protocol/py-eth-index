@@ -194,10 +194,6 @@ class Synchronizer:
 
         We ask for the latest block and have no way to detect the chain reorg!
 
-        Though there is still some hope:
-        If the latest block number has moved no more than one block, we will be
-        able to detect the reorg if it happened!
-
         This method records that a call to getLogs has to be made if we can't
         rule out that a chain reorg might have happened. This will be called
         when the latest block has moved to fromBlock +
@@ -215,11 +211,8 @@ class Synchronizer:
         # let's see if the chain has new blocks and there is the possibility of
         # a reorg
         latest_block = self.web3.eth.getBlock("latest")
-        if latest_block["number"] in (
-            before_number,
-            before_number + 1,
-        ):  # XXX check parent hash
-            logger.debug("chain has not moved far enough to have a reorg")
+        if latest_block["hash"] == latest_block_before["hash"]:
+            logger.debug("chain has not changed -> no reorg possible")
             return
 
         logger.info("scheduled getEvents call %s->%s", fromBlock, toBlock)

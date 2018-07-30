@@ -115,9 +115,9 @@ def insert_sync_entry(conn, syncid, addresses, start_block=-1):
 
     with conn.cursor() as cur:
         cur.execute(
-            """INSERT INTO SYNC (syncid, last_block_number, last_block_hash, addresses)
-               VALUES (%s, %s, %s, %s)""",
-            (syncid, start_block, "", list(addresses)),
+            """INSERT INTO SYNC (syncid, last_block_number, last_block_hash, latest_block_hash_seen, addresses)
+               VALUES (%s, %s, %s, %s, %s)""",
+            (syncid, start_block, "", "", list(addresses)),
         )
 
 
@@ -136,9 +136,20 @@ def ensure_default_entry(conn, start_block=-1):
         insert_sync_entry(conn, "default", addresses, start_block=start_block)
 
 
+def delete_events(conn, fromBlock, toBlock, addresses):
+    with conn.cursor() as cur:
+        cur.execute(
+            """DELETE FROM events
+               WHERE blocknumber>=%s AND blocknumber<=%s
+                     AND address in %s""",
+            (fromBlock, toBlock, tuple(addresses)),
+        )
+
+
 class Synchronizer:
     blocks_per_round = 50000
     number_of_confirmations_required = 10
+    number_fetch_latest_blocks = 10
 
     def __init__(self, conn, web3, syncid):
         self.conn = conn
@@ -160,6 +171,7 @@ class Synchronizer:
                 self.conn, addresses=row["addresses"]
             )
             self.last_block_number = row["last_block_number"]
+            self.latest_block_hash_seen = row["latest_block_hash_seen"]
 
     def _schedule(self, fromBlock, toBlock):
         with self.conn.cursor() as cur:
@@ -208,12 +220,16 @@ class Synchronizer:
             )
             return
 
-        # let's see if the chain has new blocks and there is the possibility of
-        # a reorg
-        latest_block = self.web3.eth.getBlock("latest")
-        if latest_block["hash"] == latest_block_before["hash"]:
-            logger.debug("chain has not changed -> no reorg possible")
-            return
+        # The following block is outcommented since we do not try to detect
+        # reorgs this time and instead always fetch the latest
+        # number_fetch_latest_blocks blocks from parity.
+
+        # # let's see if the chain has new blocks and there is the possibility of
+        # # a reorg
+        # latest_block = self.web3.eth.getBlock("latest")
+        # if latest_block["hash"] == latest_block_before["hash"]:
+        #     logger.debug("chain has not changed -> no reorg possible")
+        #     return
 
         logger.info("scheduled getEvents call %s->%s", fromBlock, toBlock)
         self._schedule(max(finality_barrier, fromBlock), toBlock)
@@ -232,12 +248,13 @@ class Synchronizer:
         )
         blocks = [self.web3.eth.getBlock(x) for x in blocknumbers]
         enrich_events(events, blocks)
+        delete_events(self.conn, fromBlock, toBlock, self.topic_index.addresses)
         insert_events(self.conn, events)
 
         with self.conn.cursor() as cur:
             cur.execute(
-                """UPDATE sync SET last_block_number=%s where syncid=%s""",
-                (toBlock, self.syncid),
+                """UPDATE sync SET last_block_number=%s, latest_block_hash_seen=%s where syncid=%s""",
+                (toBlock, hexlify(latest_block_before["hash"]), self.syncid),
             )
 
     def _resync_blocks(self, fromBlock, toBlock):
@@ -253,13 +270,7 @@ class Synchronizer:
         )
         blocks = [self.web3.eth.getBlock(x) for x in blocknumbers]
         enrich_events(events, blocks)
-        with self.conn.cursor() as cur:
-            cur.execute(
-                """DELETE FROM events
-                           WHERE blocknumber>=%s AND blocknumber<=%s
-                           AND address in %s""",
-                (fromBlock, toBlock, tuple(self.topic_index.addresses)),
-            )
+        delete_events(self.conn, fromBlock, toBlock, self.topic_index.addresses)
         insert_events(self.conn, events)
 
     def _find_scheduled_getLogs(self, latest_block_number):
@@ -291,23 +302,39 @@ class Synchronizer:
             self._resync_blocks(from_block, to_block)
             self._delete_scheduled_get_logs(from_block, to_block)
 
+    def compute_from_block(self, latest_block_number):
+        """compute the fromBlock we are fetching events from.
+        This would normally be self.last_block_number + 1, but since we decided
+        to fetch always the latest self.number_fetch_latest_blocks number of blocks,
+        we may need to lower this number a bit
+        """
+        from_block = self.last_block_number + 1
+        from_block_fetch_latest = max(
+            0, latest_block_number - self.number_fetch_latest_blocks
+        )
+        return min(from_block, from_block_fetch_latest)
+
     def sync_some_blocks(self, waittime):
         while 1:
             latest_block = self.web3.eth.getBlock("latest")
             latest_block_number = latest_block["number"]
             self._load_data_from_sync()
             self._run_scheduled_getLogs(latest_block_number)
-            fromBlock = self.last_block_number + 1
+            fromBlock = self.compute_from_block(latest_block_number)
             toBlock = min(
                 latest_block_number, self.last_block_number + self.blocks_per_round
             )
 
-            if fromBlock <= toBlock:
+            needs_sync = (
+                self.last_block_number + 1 <= toBlock
+                or hexlify(latest_block["hash"]) != self.latest_block_hash_seen
+            )
+            if needs_sync:
                 self._sync_blocks(fromBlock, toBlock, latest_block)
 
             self.conn.commit()
 
-            if not fromBlock <= toBlock:
+            if not needs_sync:
                 logger.info("already synced up to latest block %s", toBlock)
                 time.sleep(waittime)
 
@@ -390,6 +417,7 @@ def createtables():
                 syncid TEXT NOT NULL PRIMARY KEY,
                 last_block_number INTEGER NOT NULL,
                 last_block_hash TEXT NOT NULL,
+                latest_block_hash_seen TEXT NOT NULL,
                 addresses TEXT[] NOT NULL
               );
 

@@ -1,3 +1,7 @@
+#! /usr/bin/env bash
+
+set -e
+
 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
 
 version=$(python -c 'import pkg_resources; print(pkg_resources.get_distribution("eth-index").version.replace("+", "_"))')

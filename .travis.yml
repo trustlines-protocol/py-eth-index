@@ -17,6 +17,7 @@ script:
 - docker build -t ethindex .
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
 deploy:
+  skip_cleanup: true
   provider: script
   script: bash docker_push
   on:

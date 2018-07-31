@@ -1,6 +1,6 @@
 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
 
-version=$(python -c 'import pkg_resources; print(pkg_resources.get_distribution("eth-index").version)')
+version=$(python -c 'import pkg_resources; print(pkg_resources.get_distribution("eth-index").version.replace("+", "_"))')
 
 echo "Tagging with $version"
 docker tag ethindex $DOCKER_USER/py-eth-index:$version

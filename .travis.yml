@@ -1,20 +1,30 @@
+sudo: required
+services:
+- docker
 language: python
 python:
-  - "3.6"
+- '3.6'
 git:
   depth: false
 install:
-# install from requirements first, because that installs the non-binary psycopg2
-  - pip install -c constraints.txt -r requirements.txt
-  - pip install -c constraints.txt -e .
+- pip install -c constraints.txt -r requirements.txt
+- pip install -c constraints.txt -e .
 script:
-  - flake8
-  - black --check print-logs run-query setup.py ethindex
-  - mypy --ignore-missing-imports ethindex
-#  - coverage run --source=ethindex -m py.test tests
-#after_success:
-#  - coverage report
+- flake8
+- black --check print-logs run-query setup.py ethindex
+- mypy --ignore-missing-imports ethindex
+- docker build -t ethindex .
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: ".travis/push-docker-image"
+  on:
+    branch: develop
 branches:
   only:
   - master
   - develop
+env:
+  global:
+  - DOCKER_USER=trustlinesautomation
+  - secure: folEFEGDwQa8Ou3YLUTh+9MdNGvsKST7LlvOrgX+asSnrRPIf0LkJ/NRYK6zosidClhNxBu+PQfom0Qwcu+XJXJjrhutWiCSUPPFT258wKL7eenyxt0nV0ZB4U+cRj1arXvc4XCcMft15Ww+7GgM6TUHxehscIOJ7ryLEImIGraYrQfwtcktLUDxOHudGXldXQMb4ZD2zKkVcEf24d/odh2P9OLQAvvXLAtcfN0SHlnfVZGAGBv7gB87peGZMzFgkTzXE0dLECbG6Sb+cWEOW677LUec8hqJwcsjG5J6WR0rQs1coJd2bLETofhcspjO2aA+UjA0sOs4roOXalhJCMWu06O2fIxHkLpDXtc6HAn8rKGwYA+qFmIRw1OEuwGdQaAjNhgR1f0EYWAPVyoW4ELlfiSDdG2HYLvLQJ6eN7fCjtXD/8pluAwYqhLB/Q5OYrp7yGAwDT/v9GRkEagjfAVz5ip6UIOwVeUXguPyqaq3sII55THPdh6l0ncbb6dFv6hwWfC2wdl5BEjdBQYIKf1YFqRF1KrEqqWo3tgxjBkGpPavDAuMnMt22MnkDXl6exp3sEyPK5YhD4+Vx7UFmTN9iWskt5F2Ygl2G3ff9izcqTOcuxbz5+6abhbyNCcbiq7/RwC4jienfpuIHPeCRSKaYPK6PDsSafNL5u1E80k=

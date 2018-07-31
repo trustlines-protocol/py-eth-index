@@ -1,3 +1,6 @@
+sudo: required
+services:
+  - docker
 language: python
 python:
   - "3.6"
@@ -11,6 +14,7 @@ script:
   - flake8
   - black --check print-logs run-query setup.py ethindex
   - mypy --ignore-missing-imports ethindex
+  - docker build -t ethindex .
 #  - coverage run --source=ethindex -m py.test tests
 #after_success:
 #  - coverage report

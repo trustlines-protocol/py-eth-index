@@ -10,4 +10,5 @@ echo "Tagging with $version"
 docker tag ethindex trustlines/py-eth-index:$version
 echo "=====> pushing to dockerhub"
 docker push trustlines/py-eth-index:$version
+docker push trustlines/py-eth-index:latest
 echo "=====> done"

@@ -1,0 +1,6 @@
+echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+git_version=$(git describe --tags)
+
+echo "Tagging with $git_version"
+docker tag ethindex $DOCKER_USER/py-eth-index:$git_version
+docker push $DOCKER_USER/py-eth-index:$git_version

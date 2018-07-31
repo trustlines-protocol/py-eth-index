@@ -16,6 +16,11 @@ script:
 - mypy --ignore-missing-imports ethindex
 - docker build -t ethindex .
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+deploy:
+  provider: script
+  script: bash docker_push
+  on:
+    branch: develop
 branches:
   only:
   - master

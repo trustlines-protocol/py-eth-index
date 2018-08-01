@@ -10,3 +10,4 @@ flake8-invalid-escape-sequences
 flake8-string-format
 mypy
 pytest
+tox

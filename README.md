@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/trustlines-network/py-eth-index.svg?branch=develop)](https://travis-ci.org/trustlines-network/py-eth-index)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+
+
 # eth-index
 
 eth-index is an indexer for events on the ethereum blockchain. It imports events
@@ -16,11 +20,39 @@ eth-index uses python 3.6 or up. Please make sure you have the required version
 installed.
 
 Please checkout the source code from github, cd into the checked out repo and
-run:
+run the folllowing pip command with a fresh virtualenv:
 
 ```
 pip install -c constraints.txt  .
 ```
+
+## Development
+A complete development environment can be installed with:
+```
+pip install -c constraints.txt -r requirements.txt
+pip install -c constraints.txt -e .
+```
+
+This installs black, flake8, mypy and tox among other things.
+
+### black
+The source code is formatted with [black](https://github.com/ambv/black). If
+you choose not to use the pre-commit hook, you should be able to format the
+source code with `black setup.py ethindex`.
+### flake8
+We use flake8 to check for errors. Run `flake8 ethindex` to check for errors.
+### mypy
+mypy is used to check for type errors. Run `mypy --ignore-missing-imports
+ethindex` to check manually.
+### tox
+Running `tox` will run black, flake8 and mypy locally. It will also run the
+tests, though these must be written prior to that.
+
+### pre-commit
+The repository comes with a configuration file for
+[pre-commit](https://pre-commit.com/). We recommend using pipsi for installation of pre-commit.
+After installation of pre-commit, the git commit hooks can be activated with
+`pre-commit install` inside the py-eth-index repository.
 
 ## Initializing the database
 

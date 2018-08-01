@@ -10,7 +10,6 @@ dist
 *.swp
 *~
 
-.dockerignore
 .tox
 .coverage
 html/*

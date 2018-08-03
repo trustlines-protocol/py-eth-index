@@ -2,7 +2,7 @@
 
 set -e
 
-DOCKER_REPO=trustlines-network/py-eth-index
+DOCKER_REPO=trustlines/py-eth-index
 LOCAL_IMAGE=ethindex
 
 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin

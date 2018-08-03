@@ -2,17 +2,20 @@
 
 set -e
 
+DOCKER_REPO=schmir/py-eth-index
+LOCAL_IMAGE=ethindex
+
 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
 
-version=$(python -c 'import pkg_resources; print(pkg_resources.get_distribution("eth-index").version.replace("+", "_"))')
+version=$(docker run --rm $LOCAL_IMAGE cat VERSION | tr '+' '_')
 
 echo "Tagging with $version"
 echo "=====> pushing to dockerhub"
-
+exit 0
 set -x
 
-docker tag ethindex trustlines/py-eth-index:$version
-docker push trustlines/py-eth-index:$version
+docker tag $LOCAL_IMAGE $DOCKER_REPO:$version
+docker push $DOCKER_REPO:$version
 
-docker tag ethindex trustlines/py-eth-index:latest
-docker push trustlines/py-eth-index:latest
+docker tag $LOCAL_IMAGE $DOCKER_REPO:latest
+docker push $DOCKER_REPO:latest

@@ -11,7 +11,7 @@ version=$(docker run --rm $LOCAL_IMAGE cat VERSION | tr '+' '_')
 
 echo "Tagging with $version"
 echo "=====> pushing to dockerhub"
-exit 0
+
 set -x
 
 docker tag $LOCAL_IMAGE $DOCKER_REPO:$version

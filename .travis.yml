@@ -1,31 +1,46 @@
-sudo: required
-services:
-- docker
+dist: trusty
+sudo: false
 language: python
 python:
 - '3.6'
 git:
   depth: false
-install:
-- pip install -c constraints.txt -r requirements.txt
-- pip install -c constraints.txt -e .
-script:
-- flake8
-- black --check print-logs run-query setup.py ethindex
-- mypy --ignore-missing-imports ethindex
-- docker build -t ethindex .
-deploy:
-  skip_cleanup: true
-  provider: script
-  script: ".travis/push-docker-image"
-  on:
-    branch: develop
 branches:
   only:
   - master
   - develop
-env:
-  global:
-  - DOCKER_USER=trustlinesautomation
-  # DOCKER_PASSWORD
-  - secure: "NRn1XEz7pAGgZLXONJzTMpA50xd2/lzxcQQRH2z7eA4UthY4aD7/Vh31U6D1t89Ts3gLu4lxYMI2EFs259SP3s6uho4Ww8XhowThPgql9FnjuxT6SKa+H4a/gqQwQwqDxZqxr4j18H/8a4MfijjGDgth/VwYAdaFx1QhkjS/Mad84oIc54NBGlB7qNl+GQ4Zs/fyHEZpfDDQbuxBh6cU/n4fQlk4LU/W+Hx0VwGl4uN/oPX9VrUkVilVMNeqQEoUcVW09yUA6D0IsD4qqjpaJRO3KWAsOQwik5s62MmzADe8baRnE0LiRRJ4gEJfTXYz9dyBby5IRKUQ5x2zbny1pJGLbuZ6/eXABDuy0zQKPLLOi5h/+7Xb+di1y5AGGbmaWuW/K2vHFZ/pIQzpvmsXcnGllCURDupEAFNqkSAef56b3ptQjRyHn+cEUhYvH2bk7sxEedbpL3R5KT1HFAB+4v2iQbLBrrlV87MjSE2eP//1g53YTVK6gZOJ325HW2kDdNuPlWddo/DnyQ52I68viyt8xQM668ewYDYaZtrZxk6XIj8DhVscaVcUCWvcEJksSndTttZR6yJFiKSczvGhf3MYhLOEBbkqve5038uu4YopvaffxkizFcnxPdJSXTugQXx2mIXkM8QfPU1mE2NWd9zUJfC5Tv+cC4Dq2TxwQW0="
+  - /^[0-9]+/
+stages:
+  - name: testing
+  - name: deploying
+
+jobs:
+  include:
+    - stage: testing
+      install:
+        - pip install -c constraints.txt -r requirements.txt
+        - pip install -c constraints.txt -e .
+      script:
+        - flake8
+        - black --check print-logs run-query setup.py ethindex
+        - mypy --ignore-missing-imports ethindex
+
+    - stage: deploying
+      name: docker
+      env:
+        - DOCKER_USER=trustlinesautomation
+        # DOCKER_PASSWORD
+        - secure: "NRn1XEz7pAGgZLXONJzTMpA50xd2/lzxcQQRH2z7eA4UthY4aD7/Vh31U6D1t89Ts3gLu4lxYMI2EFs259SP3s6uho4Ww8XhowThPgql9FnjuxT6SKa+H4a/gqQwQwqDxZqxr4j18H/8a4MfijjGDgth/VwYAdaFx1QhkjS/Mad84oIc54NBGlB7qNl+GQ4Zs/fyHEZpfDDQbuxBh6cU/n4fQlk4LU/W+Hx0VwGl4uN/oPX9VrUkVilVMNeqQEoUcVW09yUA6D0IsD4qqjpaJRO3KWAsOQwik5s62MmzADe8baRnE0LiRRJ4gEJfTXYz9dyBby5IRKUQ5x2zbny1pJGLbuZ6/eXABDuy0zQKPLLOi5h/+7Xb+di1y5AGGbmaWuW/K2vHFZ/pIQzpvmsXcnGllCURDupEAFNqkSAef56b3ptQjRyHn+cEUhYvH2bk7sxEedbpL3R5KT1HFAB+4v2iQbLBrrlV87MjSE2eP//1g53YTVK6gZOJ325HW2kDdNuPlWddo/DnyQ52I68viyt8xQM668ewYDYaZtrZxk6XIj8DhVscaVcUCWvcEJksSndTttZR6yJFiKSczvGhf3MYhLOEBbkqve5038uu4YopvaffxkizFcnxPdJSXTugQXx2mIXkM8QfPU1mE2NWd9zUJfC5Tv+cC4Dq2TxwQW0="
+
+      install: /bin/true
+      sudo: true
+      service: docker
+      script:
+        - docker build -t ethindex .
+      deploy:
+        skip_cleanup: true
+        provider: script
+        script: ".travis/push-docker-image"
+        on:
+          all_branches: true
+          condition: $TRAVIS_BRANCH =~ ^(develop|[0-9]+.*)$

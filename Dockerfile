@@ -7,35 +7,37 @@
 #
 #   docker build . -t ethindex
 
-FROM ubuntu:18.04 as ubuntu-python
+FROM ubuntu:18.04 as builder
 # python needs LANG
 ENV LANG C.UTF-8
 RUN apt-get -y update \
-    && apt-get dist-upgrade -y \
-    && apt-get install -y --no-install-recommends python3 python3-distutils libpq5
-
-FROM ubuntu-python as builder
-RUN apt-get install -y --no-install-recommends python3-dev python3-venv git build-essential libpq-dev
+&& apt-get install -y --no-install-recommends python3 python3-distutils libpq5 \
+               python3-dev python3-venv git build-essential libpq-dev
 
 RUN python3 -m venv /opt/ethindex
-WORKDIR /opt/ethindex
-RUN bin/pip install --disable-pip-version-check pip==18.0
+ENV PATH "/opt/ethindex/bin:${PATH}"
 
-COPY ./constraints.txt /py-eth-index/constraints.txt
-COPY ./requirements.txt /py-eth-index/requirements.txt
+WORKDIR /py-eth-index
+RUN pip install --disable-pip-version-check pip==18.0
+
+COPY ./constraints.txt constraints.txt
+COPY ./requirements.txt requirements.txt
 # remove development dependencies from the end of the file
-RUN sed -i -e '/development dependencies/q' /py-eth-index/requirements.txt
+RUN sed -i -e '/development dependencies/q' requirements.txt
 
-RUN bin/pip install --disable-pip-version-check -c /py-eth-index/constraints.txt -r /py-eth-index/requirements.txt
+RUN pip install --disable-pip-version-check -c constraints.txt -r requirements.txt
 
 COPY . /py-eth-index
-RUN bin/pip install --disable-pip-version-check -c /py-eth-index/constraints.txt --no-binary=psycopg2 /py-eth-index
-RUN bin/python -c 'import pkg_resources; print(pkg_resources.get_distribution("eth-index").version)' >VERSION
+RUN pip install --disable-pip-version-check -c constraints.txt --no-binary=psycopg2 .
+RUN python -c 'import pkg_resources; print(pkg_resources.get_distribution("eth-index").version)' >/opt/ethindex/VERSION
 
 # copy the contents of the virtualenv from the intermediate container
-FROM ubuntu-python
-RUN rm -rf /var/lib/apt/lists/*
-WORKDIR /opt/ethindex
+FROM ubuntu:18.04
+ENV LANG C.UTF-8
 COPY --from=builder /opt/ethindex /opt/ethindex
-RUN ln -s /opt/ethindex/bin/ethindex /usr/local/bin/
+WORKDIR /opt/ethindex
+RUN apt-get -y update \
+    && apt-get install -y --no-install-recommends python3 python3-distutils libpq5 \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s /opt/ethindex/bin/ethindex /usr/local/bin/
 CMD ["/opt/ethindex/bin/ethindex"]

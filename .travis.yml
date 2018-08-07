@@ -27,7 +27,7 @@ jobs:
         - flake8
         - black --check print-logs run-query setup.py ethindex testing
         - mypy --ignore-missing-imports ethindex testing
-        - py.test
+        - py.test testing
 
     - stage: deploying
       name: docker

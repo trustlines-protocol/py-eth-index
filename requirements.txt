@@ -11,3 +11,4 @@ flake8-string-format
 mypy
 pytest
 tox
+testing.postgresql

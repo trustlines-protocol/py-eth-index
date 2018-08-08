@@ -282,3 +282,23 @@ def createtables():
                 abi JSONB NOT NULL
               );"""
         )
+
+
+@click.command()
+@click.option("--force", help="really delete the tables", is_flag=True)
+def droptables(force):
+    """drop database tables"""
+    logging.basicConfig(level=logging.INFO)
+    logger.info("version %s starting", util.get_version())
+    if not force:
+        logger.warn("dry-run, please specify --force to really delete the tables")
+
+    with connect("") as conn:
+        cur = conn.cursor()
+        for table in ["events", "sync", "abis"]:
+            stmt = "DROP TABLE IF EXISTS {}".format(table)
+            logger.info("executing %r", stmt)
+            if force:
+                cur.execute(stmt)
+
+    sys.exit(0 if force else 1)  # just in case we forget to add --force

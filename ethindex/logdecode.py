@@ -41,8 +41,10 @@ def build_address_to_abi_dict(
     for network in addresses_json["networks"]:
         add_abi(network, "CurrencyNetwork")
 
-    add_abi(addresses_json["unwEth"], "UnwEth")
-    add_abi(addresses_json["exchange"], "Exchange")
+    if "unwEth" in addresses_json:
+        add_abi(addresses_json["unwEth"], "UnwEth")
+    if "exchange" in addresses_json:
+        add_abi(addresses_json["exchange"], "Exchange")
     return res
 
 

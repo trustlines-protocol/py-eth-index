@@ -12,3 +12,4 @@ mypy
 pytest
 tox
 testing.postgresql
+eth-tester[py-evm]

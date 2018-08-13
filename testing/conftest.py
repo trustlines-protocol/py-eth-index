@@ -9,6 +9,7 @@ from web3 import Web3
 from web3.providers.eth_tester import EthereumTesterProvider
 import attr
 from typing import List, Any
+from ethindex import logdecode
 
 
 @pytest.fixture(scope="session")
@@ -77,6 +78,9 @@ class TestEnv:
     currency_networks: List[Any]
     addresses_json_path: str
     contracts_json_path: str
+    contracts: List[Any]
+    abi: Any
+    topic_index: logdecode.TopicIndex
 
 
 @pytest.fixture
@@ -95,12 +99,21 @@ def testenv(ethereum_tester, compiled_contracts, tmpdir, contracts_json_path):
     addresses_json_path = tmpdir.join("addresses.json")
     addresses_json_path.write(json.dumps({"networks": contract_addresses}))
     snapshot = ethereum_tester.take_snapshot()
+    abi = contract_interface["abi"]
     yield TestEnv(
         web3,
         contract_addresses,
         currency_networks,
         str(addresses_json_path),
         contracts_json_path,
+        [
+            web3.eth.contract(address=contract_address, abi=contract_interface["abi"])
+            for contract_address in contract_addresses
+        ],
+        abi,
+        logdecode.TopicIndex(
+            {contract_address: abi for contract_address in contract_addresses}
+        ),
     )
     ethereum_tester.revert_to_snapshot(snapshot)
 

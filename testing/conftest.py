@@ -1,4 +1,5 @@
 import os
+import json
 import testing.postgresql
 import pytest
 import psycopg2
@@ -6,6 +7,19 @@ import psycopg2.extras
 import eth_tester
 from web3 import Web3
 from web3.providers.eth_tester import EthereumTesterProvider
+import attr
+from typing import List, Any
+
+
+@pytest.fixture(scope="session")
+def contracts_json_path():
+    return os.path.normpath(os.path.join(__file__, "..", "build/contracts.json"))
+
+
+@pytest.fixture(scope="session")
+def compiled_contracts(contracts_json_path):
+    with open(contracts_json_path) as contracts_json:
+        return json.load(contracts_json)
 
 
 @pytest.fixture(scope="session")
@@ -47,9 +61,51 @@ def ethereum_tester():
     return tester
 
 
+def deploy_contract(web3, contract_interface):
+    CurrencyNetwork = web3.eth.contract(
+        abi=contract_interface["abi"], bytecode=contract_interface["bytecode"]
+    )
+    tx_hash = CurrencyNetwork.constructor().transact()
+    tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
+    return tx_receipt.contractAddress
+
+
+@attr.s(auto_attribs=True)
+class TestEnv:
+    web3: Web3
+    contract_addresses: List[str]
+    currency_networks: List[Any]
+    addresses_json_path: str
+    contracts_json_path: str
+
+
 @pytest.fixture
-def web3_eth_tester(ethereum_tester):
+def testenv(ethereum_tester, compiled_contracts, tmpdir, contracts_json_path):
     web3 = Web3(EthereumTesterProvider(ethereum_tester))
+    web3.eth.defaultAccount = web3.eth.accounts[0]
+
+    contract_interface = compiled_contracts["CurrencyNetwork"]
+    contract_addresses = [deploy_contract(web3, contract_interface) for i in range(3)]
+    currency_networks = [
+        web3.eth.contract(address=contract_address, abi=contract_interface["abi"])
+        for contract_address in contract_addresses
+    ]
+    print("ADDRESSES:", contract_addresses)
+
+    addresses_json_path = tmpdir.join("addresses.json")
+    addresses_json_path.write(json.dumps({"networks": contract_addresses}))
     snapshot = ethereum_tester.take_snapshot()
-    yield web3
+    yield TestEnv(
+        web3,
+        contract_addresses,
+        currency_networks,
+        str(addresses_json_path),
+        contracts_json_path,
+    )
     ethereum_tester.revert_to_snapshot(snapshot)
+
+
+@pytest.fixture
+def web3_eth_tester(testenv):
+    print("TESTENVC", testenv)
+    return testenv.web3

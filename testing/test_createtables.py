@@ -37,3 +37,16 @@ def test_droptables_with_force(conn):
 
     tables = find_tables(conn)
     assert tables == []
+
+
+def test_importabi(conn, testenv):
+    os.system("ethindex createtables")
+    os.system(
+        "ethindex importabi --addresses {} --contracts {}".format(
+            testenv.addresses_json_path, testenv.contracts_json_path
+        )
+    )
+    with conn.cursor() as cur:
+        cur.execute("select * from abis")
+        abis = cur.fetchall()
+        assert len(abis) == len(testenv.contract_addresses)

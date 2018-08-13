@@ -227,24 +227,60 @@ def runsync(jsonrpc, waittime, startblock):
             time.sleep(10)
 
 
+def do_importabi(conn, addresses, contracts):
+    a2abi = logdecode.build_address_to_abi_dict(
+        json.load(open(addresses)), json.load(open(contracts))
+    )
+    logger.info("importing %s abis", len(a2abi))
+    with conn:
+        with conn.cursor() as cur:
+            for contract_address, abi in a2abi.items():
+                cur.execute(
+                    """INSERT INTO abis (contract_address, abi)
+                       VALUES (%s, %s)
+                       ON CONFLICT(contract_address) DO NOTHING""",
+                    (contract_address, json.dumps(abi)),
+                )
+
+
 @click.command()
 @click.option("--addresses", default="addresses.json")
 @click.option("--contracts", default="contracts.json")
 def importabi(addresses, contracts):
     logging.basicConfig(level=logging.INFO)
     logger.info("version %s starting", util.get_version())
-    a2abi = logdecode.build_address_to_abi_dict(
-        json.load(open(addresses)), json.load(open(contracts))
-    )
-    logger.info("importing %s abis", len(a2abi))
-    with connect("") as conn:
-        cur = conn.cursor()
-        for contract_address, abi in a2abi.items():
+    do_importabi(connect(""), addresses, contracts)
+
+
+def do_createtables(conn):
+    with conn:
+        with conn.cursor() as cur:
             cur.execute(
-                """INSERT INTO abis (contract_address, abi)
-                   VALUES (%s, %s)
-                   ON CONFLICT(contract_address) DO NOTHING""",
-                (contract_address, json.dumps(abi)),
+                """
+                CREATE TABLE events (
+                     transactionHash TEXT NOT NULL,
+                     blockNumber INTEGER NOT NULL,
+                     address TEXT NOT NULL,
+                     eventName TEXT NOT NULL,
+                     args JSONB,
+                     blockHash TEXT NOT NULL,
+                     transactionIndex INTEGER NOT NULL,
+                     logIndex INTEGER NOT NULL,
+                     timestamp INTEGER NOT NULL,
+                     PRIMARY KEY(transactionHash, address, blockHash, transactionIndex, logIndex)
+                   );
+
+                  CREATE TABLE sync (
+                    syncid TEXT NOT NULL PRIMARY KEY,
+                    last_block_number INTEGER NOT NULL,
+                    last_block_hash TEXT NOT NULL,
+                    addresses TEXT[] NOT NULL
+                  );
+
+                  CREATE TABLE abis (
+                    contract_address TEXT NOT NULL PRIMARY KEY,
+                    abi JSONB NOT NULL
+                  );"""
             )
 
 
@@ -253,35 +289,17 @@ def createtables():
     logging.basicConfig(level=logging.INFO)
     logger.info("version %s starting", util.get_version())
     logger.info("creating tables")
-    with connect("") as conn:
-        cur = conn.cursor()
-        cur.execute(
-            """
-            CREATE TABLE events (
-             transactionHash TEXT NOT NULL,
-                 blockNumber INTEGER NOT NULL,
-                 address TEXT NOT NULL,
-                 eventName TEXT NOT NULL,
-                 args JSONB,
-                 blockHash TEXT NOT NULL,
-                 transactionIndex INTEGER NOT NULL,
-                 logIndex INTEGER NOT NULL,
-                 timestamp INTEGER NOT NULL,
-                 PRIMARY KEY(transactionHash, address, blockHash, transactionIndex, logIndex)
-               );
+    do_createtables(connect(""))
 
-              CREATE TABLE sync (
-                syncid TEXT NOT NULL PRIMARY KEY,
-                last_block_number INTEGER NOT NULL,
-                last_block_hash TEXT NOT NULL,
-                addresses TEXT[] NOT NULL
-              );
 
-              CREATE TABLE abis (
-                contract_address TEXT NOT NULL PRIMARY KEY,
-                abi JSONB NOT NULL
-              );"""
-        )
+def do_droptables(conn, force):
+    with conn:
+        with conn.cursor() as cur:
+            for table in ["events", "sync", "abis"]:
+                stmt = "DROP TABLE IF EXISTS {}".format(table)
+                logger.info("executing %r", stmt)
+                if force:
+                    cur.execute(stmt)
 
 
 @click.command()
@@ -293,12 +311,6 @@ def droptables(force):
     if not force:
         logger.warn("dry-run, please specify --force to really delete the tables")
 
-    with connect("") as conn:
-        cur = conn.cursor()
-        for table in ["events", "sync", "abis"]:
-            stmt = "DROP TABLE IF EXISTS {}".format(table)
-            logger.info("executing %r", stmt)
-            if force:
-                cur.execute(stmt)
+    do_droptables(connect(""), force)
 
     sys.exit(0 if force else 1)  # just in case we forget to add --force

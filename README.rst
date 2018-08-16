@@ -133,6 +133,12 @@ Status and Limitations
 - ethindex currently does not handle chain reorgs
 - there currently is no way to add more contracts to index
 
+Change log
+----------
+
+See `CHANGELOG <https://github.com/trustlines-network/py-eth-index/blob/develop/CHANGELOG.rst>`_.
+
+
 .. |Build Status| image:: https://travis-ci.org/trustlines-network/py-eth-index.svg?branch=develop
    :target: https://travis-ci.org/trustlines-network/py-eth-index
 .. |Code style: black| image:: https://img.shields.io/badge/code%20style-black-000000.svg

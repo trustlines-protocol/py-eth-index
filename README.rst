@@ -42,16 +42,23 @@ This installs black, flake8, mypy and tox among other things.
 
 black
 ~~~~~
+The source code is formatted with `black <https://github.com/ambv/black>`__. If
+you choose not to use the pre-commit hook, you should be able to format the
+source code with ``black setup.py ethindex``.
 
-The source code is formatted with
-`black <https://github.com/ambv/black>`__. If you choose not to use the
-pre-commit hook, you should be able to format the source code with
-``black setup.py ethindex``. ### flake8 We use flake8 to check for
-errors. Run ``flake8 ethindex`` to check for errors. ### mypy mypy is
-used to check for type errors. Run
-``mypy --ignore-missing-imports ethindex`` to check manually. ### tox
-Running ``tox`` will run black, flake8 and mypy locally. It will also
-run the tests, though these must be written prior to that.
+flake8
+~~~~~~
+We use flake8 to check for errors. Run ``flake8 ethindex`` to check for errors.
+
+mypy
+~~~~
+mypy is used to check for type errors. Run ``mypy --ignore-missing-imports
+ethindex`` to check manually.
+
+tox
+~~~
+Running ``tox`` will run black, flake8 and mypy locally. It will also run the
+tests, though these must be written prior to that.
 
 pre-commit
 ~~~~~~~~~~

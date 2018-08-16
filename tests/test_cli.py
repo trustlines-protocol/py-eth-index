@@ -1,4 +1,4 @@
-import os
+import subprocess
 
 
 def find_tables(conn):
@@ -11,7 +11,7 @@ def find_tables(conn):
 
 
 def test_createtables(conn):
-    err = os.system("ethindex createtables")
+    err = subprocess.call(["ethindex", "createtables"])
     assert err == 0
     tables = find_tables(conn)
     print("FOUND", tables)
@@ -20,19 +20,19 @@ def test_createtables(conn):
 
 def test_droptables_without_force(conn):
     """droptables require the user to pass --force"""
-    err = os.system("ethindex createtables")
+    err = subprocess.call(["ethindex", "createtables"])
     assert err == 0
     tables_before = find_tables(conn)
-    err = os.system("ethindex droptables")
-    assert err == 256  # exit code 1
+    err = subprocess.call(["ethindex", "droptables"])
+    assert err == 1
     tables_after = find_tables(conn)
     assert tables_before == tables_after
 
 
 def test_droptables_with_force(conn):
-    err = os.system("ethindex createtables")
+    err = subprocess.call(["ethindex", "createtables"])
     assert err == 0
-    err = os.system("ethindex droptables --force")
+    err = subprocess.call(["ethindex", "droptables", "--force"])
     assert err == 0
 
     tables = find_tables(conn)
@@ -40,12 +40,19 @@ def test_droptables_with_force(conn):
 
 
 def test_importabi(conn, testenv):
-    os.system("ethindex createtables")
-    os.system(
-        "ethindex importabi --addresses {} --contracts {}".format(
-            testenv.addresses_json_path, testenv.contracts_json_path
-        )
+    err = subprocess.call(["ethindex", "createtables"])
+    assert err == 0
+    err = subprocess.call(
+        [
+            "ethindex",
+            "importabi",
+            "--addresses",
+            testenv.addresses_json_path,
+            "--contracts",
+            testenv.contracts_json_path,
+        ]
     )
+    assert err == 0
     with conn.cursor() as cur:
         cur.execute("select * from abis")
         abis = cur.fetchall()

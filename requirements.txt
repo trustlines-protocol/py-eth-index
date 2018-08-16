@@ -1,5 +1,5 @@
 psycopg2>=2.7,<2.8 --no-binary psycopg2
-web3
+web3>=4.4.1,<4.5
 click
 attrs
 # --- development dependencies, i.e. dependencies not needed for running ethindex

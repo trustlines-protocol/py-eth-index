@@ -14,7 +14,7 @@ from os import path
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, "README.md"), encoding="utf-8") as f:
+with open(path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
@@ -27,7 +27,7 @@ setup(
     url="https://github.com/trustlines-network/py-eth-index",
     # Author details
     author="Trustlines-Network",
-    author_email="",
+    author_email="contact@brainbot.com",
     # Choose your license
     license="MIT",
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
@@ -39,7 +39,6 @@ setup(
         "Development Status :: 2 - Pre-Alpha",
         # Indicate who your project is intended for
         "Intended Audience :: Developers",
-        "Topic :: Software Development :: Build Tools",
         # Pick your license as you wish (should match "license" above)
         "License :: OSI Approved :: MIT License",
         # Specify the Python versions you support here. In particular, ensure
@@ -59,7 +58,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=["web3", "psycopg2", "click", "attrs"],
+    install_requires=["web3>=4.4.1,<4.5", "psycopg2>=2.7,<2.8", "click", "attrs"],
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:

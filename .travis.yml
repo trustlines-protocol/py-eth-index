@@ -25,9 +25,9 @@ jobs:
         - pip install -c constraints.txt -e .
       script:
         - flake8
-        - black --check print-logs run-query setup.py ethindex testing
-        - mypy --ignore-missing-imports ethindex testing
-        - pytest testing
+        - black --check print-logs run-query setup.py ethindex tests
+        - mypy --ignore-missing-imports ethindex tests
+        - pytest tests
 
     - stage: deploying
       name: docker

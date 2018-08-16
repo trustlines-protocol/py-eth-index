@@ -1,5 +1,7 @@
 dist: trusty
 sudo: false
+addons:
+  postgresql: "9.5"
 language: python
 python:
 - '3.6'
@@ -9,6 +11,7 @@ branches:
   only:
   - master
   - develop
+  - feature/basic-testing
   - /^[0-9]+/
 stages:
   - name: testing
@@ -22,8 +25,9 @@ jobs:
         - pip install -c constraints.txt -e .
       script:
         - flake8
-        - black --check print-logs run-query setup.py ethindex
-        - mypy --ignore-missing-imports ethindex
+        - black --check print-logs run-query setup.py ethindex tests
+        - mypy --ignore-missing-imports ethindex tests
+        - pytest tests
 
     - stage: deploying
       name: docker

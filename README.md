@@ -50,6 +50,10 @@ tests for postgres, the postgres database server must be installed on the local
 machine. It doesn't have to be started though, since the tests do start postgres
 with a temporary data directory.
 
+On a debian based system `apt install postgresql` will install the postgresql
+database.
+
+
 ### pre-commit
 The repository comes with a configuration file for
 [pre-commit](https://pre-commit.com/). We recommend using pipsi for installation of pre-commit.

@@ -94,7 +94,6 @@ def testenv(ethereum_tester, compiled_contracts, tmpdir, contracts_json_path):
         web3.eth.contract(address=contract_address, abi=contract_interface["abi"])
         for contract_address in contract_addresses
     ]
-    print("ADDRESSES:", contract_addresses)
 
     addresses_json_path = tmpdir.join("addresses.json")
     addresses_json_path.write(json.dumps({"networks": contract_addresses}))
@@ -120,5 +119,4 @@ def testenv(ethereum_tester, compiled_contracts, tmpdir, contracts_json_path):
 
 @pytest.fixture
 def web3_eth_tester(testenv):
-    print("TESTENVC", testenv)
     return testenv.web3

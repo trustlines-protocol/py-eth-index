@@ -57,8 +57,14 @@ ethindex`` to check manually.
 
 tox
 ~~~
-Running ``tox`` will run black, flake8 and mypy locally. It will also run the
-tests, though these must be written prior to that.
+Running ``tox`` will run black, flake8, mypy and pytest locally.
+
+Since we also do run some tests for postgres, the postgres database server must
+be installed on the local machine. It doesn't have to be started though, since
+the tests do start postgres with a temporary data directory.
+
+On a debian based system ``apt install postgresql`` will install the postgresql
+database.
 
 pre-commit
 ~~~~~~~~~~

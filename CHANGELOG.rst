@@ -8,4 +8,4 @@ Change Log
 * basic test infrastructure has been added
 
 
-.. _0.1.1: https://github.com/trustlines-network/watch/compare/0.1.0...0.1.1
+.. _0.1.1: https://github.com/trustlines-network/py-eth-index/compare/0.1.0...0.1.1

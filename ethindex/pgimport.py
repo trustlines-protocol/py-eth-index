@@ -115,12 +115,11 @@ def insert_sync_entry(conn, syncid, addresses, start_block=-1):
         cur.execute(
             """INSERT INTO SYNC (syncid,
                                  last_block_number,
-                                 last_block_hash,
                                  addresses,
                                  last_confirmed_block_number,
                                  latest_block_hash)
-               VALUES (%s, %s, %s, %s, %s, %s)""",
-            (syncid, start_block, "", list(addresses), start_block, ""),
+               VALUES (%s, %s, %s, %s, %s)""",
+            (syncid, start_block, list(addresses), start_block, ""),
         )
 
 
@@ -307,7 +306,6 @@ def do_createtables(conn):
                   CREATE TABLE sync (
                     syncid TEXT NOT NULL PRIMARY KEY,
                     last_block_number INTEGER NOT NULL,
-                    last_block_hash TEXT NOT NULL,
                     addresses TEXT[] NOT NULL,
                     last_confirmed_block_number INTEGER NOT NULL,
                     latest_block_hash TEXT NOT NULL

@@ -150,12 +150,12 @@ def delete_events(conn, fromBlock, toBlock, addresses):
 
 class Synchronizer:
     blocks_per_round = 50000
-    required_confirmations = 10
 
-    def __init__(self, conn, web3, syncid):
+    def __init__(self, conn, web3, syncid, required_confirmations=10):
         self.conn = conn
         self.web3 = web3
         self.syncid = syncid
+        self.required_confirmations = required_confirmations
 
     def _load_data_from_sync(self):
         """load the current sync status for this job from the sync table
@@ -232,6 +232,11 @@ class Synchronizer:
 @click.command()
 @click.option("--jsonrpc", help="jsonrpc URL to use", default="http://127.0.0.1:8545")
 @click.option(
+    "--required-confirmations",
+    help="number of confirmations until we consider a block final",
+    default=10,
+)
+@click.option(
     "--waittime",
     help="time to sleep in milliseconds waiting for a new block",
     default=1000,
@@ -239,7 +244,7 @@ class Synchronizer:
 @click.option(
     "--startblock", help="Block from where events should be synced", default=-1
 )
-def runsync(jsonrpc, waittime, startblock):
+def runsync(jsonrpc, waittime, startblock, required_confirmations):
     logging.basicConfig(level=logging.INFO)
     logger.info("version %s starting", util.get_version())
 
@@ -250,7 +255,9 @@ def runsync(jsonrpc, waittime, startblock):
             web3 = Web3(Web3.HTTPProvider(jsonrpc, request_kwargs={"timeout": 60}))
             with connect("") as conn:
                 ensure_default_entry(conn)
-                s = Synchronizer(conn, web3, "default")
+                s = Synchronizer(
+                    conn, web3, "default", required_confirmations=required_confirmations
+                )
                 s.sync_some_blocks(waittime * 0.001)
         except Exception as e:
             logger.error(

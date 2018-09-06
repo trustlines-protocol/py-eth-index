@@ -123,19 +123,33 @@ def insert_sync_entry(conn, syncid, addresses, start_block=-1):
         )
 
 
-def ensure_default_entry(conn, start_block=-1):
+def ensure_sync_entry(conn, syncid, start_block=-1):
     with conn.cursor() as cur:
-        cur.execute("""select * from sync where syncid=%s""", ("default",))
+        cur.execute("""select * from sync where syncid=%s""", (syncid,))
         if cur.fetchall():
             return
+        cur.execute("""select addresses from sync""")
+        rows = cur.fetchall()
+        other_addresses = set().union(*[r["addresses"] for r in rows])
 
         cur.execute("""select contract_address from abis""")
-        addresses = [x["contract_address"] for x in cur.fetchall()]
+        contract_addresses = set([x["contract_address"] for x in cur.fetchall()])
+
+        addresses = contract_addresses - other_addresses
+        logger.info(
+            "found %s contracts, %s already being synced",
+            len(contract_addresses),
+            len(other_addresses),
+        )
         if not addresses:
             raise RuntimeError(
                 "No ABIs found. Please add some ABIs first with 'ethindex importabi'"
             )
-        insert_sync_entry(conn, "default", addresses, start_block=start_block)
+        insert_sync_entry(conn, syncid, addresses, start_block=start_block)
+
+
+def ensure_default_entry(conn, start_block=-1):
+    ensure_sync_entry(conn, "default", start_block=start_block)
 
 
 def delete_events(conn, fromBlock, toBlock, addresses):
@@ -253,7 +267,8 @@ class Synchronizer:
 @click.option(
     "--startblock", help="Block from where events should be synced", default=-1
 )
-def runsync(jsonrpc, waittime, startblock, required_confirmations):
+@click.option("--syncid", help="syncid to use", default="default")
+def runsync(jsonrpc, waittime, startblock, required_confirmations, syncid):
     logging.basicConfig(level=logging.INFO)
     logger.info("version %s starting", util.get_version())
 
@@ -263,9 +278,9 @@ def runsync(jsonrpc, waittime, startblock, required_confirmations):
         try:
             web3 = Web3(Web3.HTTPProvider(jsonrpc, request_kwargs={"timeout": 60}))
             with connect("") as conn:
-                ensure_default_entry(conn)
+                ensure_sync_entry(conn, syncid)
                 s = Synchronizer(
-                    conn, web3, "default", required_confirmations=required_confirmations
+                    conn, web3, syncid, required_confirmations=required_confirmations
                 )
                 s.sync_loop(waittime * 0.001)
         except Exception as e:

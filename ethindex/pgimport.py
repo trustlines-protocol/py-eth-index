@@ -202,10 +202,10 @@ class Synchronizer:
             )
 
     def sync_round(self):
+        self._load_data_from_sync()
         latest_block = self.web3.eth.getBlock("latest")
         latest_block_hash = hexlify(latest_block["hash"])
         latest_block_number = latest_block["number"]
-        self._load_data_from_sync()
         fromBlock = self.last_confirmed_block_number + 1
         toBlock = min(
             latest_block_number,

@@ -10,6 +10,7 @@ from web3.providers.eth_tester import EthereumTesterProvider
 import attr
 from typing import List, Any
 from ethindex import logdecode
+import eth_utils
 
 
 @pytest.fixture(scope="session")
@@ -81,10 +82,16 @@ class TestEnv:
     contracts: List[Any]
     abi: Any
     topic_index: logdecode.TopicIndex
+    ethereum_tester: eth_tester.EthereumTester
 
 
 @pytest.fixture
-def testenv(ethereum_tester, compiled_contracts, tmpdir, contracts_json_path):
+def testenv(
+    ethereum_tester: eth_tester.EthereumTester,
+    compiled_contracts,
+    tmpdir,
+    contracts_json_path,
+):
     web3 = Web3(EthereumTesterProvider(ethereum_tester))
     web3.eth.defaultAccount = web3.eth.accounts[0]
 
@@ -113,6 +120,7 @@ def testenv(ethereum_tester, compiled_contracts, tmpdir, contracts_json_path):
         logdecode.TopicIndex(
             {contract_address: abi for contract_address in contract_addresses}
         ),
+        ethereum_tester,
     )
     ethereum_tester.revert_to_snapshot(snapshot)
 
@@ -120,3 +128,27 @@ def testenv(ethereum_tester, compiled_contracts, tmpdir, contracts_json_path):
 @pytest.fixture
 def web3_eth_tester(testenv):
     return testenv.web3
+
+
+def make_address(i: int):
+    return eth_utils.to_checksum_address("0x{:040X}".format(i))
+
+
+class EventEmitter:
+    """this class is used to emit events into the blockchain"""
+
+    def __init__(self, testenv):
+        self.testenv = testenv
+        self.value = 0
+
+    def add_some_tranfer_events(self):
+        for i, contract in enumerate(self.testenv.contracts):
+            contract.functions.makeTransfer(
+                make_address(i), make_address(i + 1), self.value
+            ).transact()
+            self.value += 1
+
+
+@pytest.fixture
+def event_emitter(testenv):
+    return EventEmitter(testenv)

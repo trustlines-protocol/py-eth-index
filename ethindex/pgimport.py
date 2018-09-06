@@ -229,7 +229,8 @@ class Synchronizer:
             min(toBlock, latest_block_number - self.required_confirmations), -1
         )
         if fromBlock <= toBlock and (
-            toBlock < latest_block_number or latest_block_hash != self.latest_block_hash
+            self.last_block_number != latest_block_number
+            or self.latest_block_hash != latest_block_hash
         ):
             self._sync_blocks(
                 fromBlock, toBlock, last_confirmed_block_number, latest_block_hash

@@ -1,13 +1,13 @@
 """test that chain reorgs are handled"""
 
 import pytest
+import logging
 
 
 def fetch_events(conn):
     with conn.cursor() as cur:
         cur.execute("select * from events order by blocknumber")
         rows = cur.fetchall()
-        print(rows)
         return [event["args"]["_value"] for event in rows]
 
 
@@ -57,3 +57,21 @@ def test_reorg_shorter_chain(testenv, event_emitter, conn, synchronizer):
     values_after = fetch_events(conn)
     print("values_after", values_after)
     assert values_after == [0, 1, 2, 9, 10, 11]
+
+
+def test_sync_until_current(testenv, event_emitter, conn, synchronizer, caplog):
+    # event_emitter.add_some_tranfer_events adds 3 events and increases the value
+    # added by one for each event
+    caplog.set_level(logging.INFO)
+    synchronizer.blocks_per_round = 23
+    synchronizer.required_confirmations = 0
+    synchronizer.sync_until_current()
+
+    for _ in range(11):
+        event_emitter.add_some_tranfer_events()
+
+    synchronizer.sync_until_current()
+
+    values = fetch_events(conn)
+    print(values)
+    assert len(values) == 33

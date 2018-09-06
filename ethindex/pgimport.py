@@ -202,36 +202,38 @@ class Synchronizer:
             )
         self.conn.commit()
 
-    def sync_some_blocks(self, waittime, stop_when_synced=False):
+    def sync_round(self):
+        latest_block = self.web3.eth.getBlock("latest")
+        latest_block_hash = hexlify(latest_block["hash"])
+        latest_block_number = latest_block["number"]
+        self._load_data_from_sync()
+        fromBlock = self.last_confirmed_block_number + 1
+        toBlock = min(
+            latest_block_number,
+            self.last_confirmed_block_number + self.blocks_per_round,
+        )
+        last_confirmed_block_number = max(
+            min(toBlock, latest_block_number - self.required_confirmations), -1
+        )
+        if fromBlock <= toBlock and (
+            toBlock < latest_block_number or latest_block_hash != self.latest_block_hash
+        ):
+            self._sync_blocks(
+                fromBlock, toBlock, last_confirmed_block_number, latest_block_hash
+            )
+            return True
+        else:
+            logger.info("already synced up to latest block %s", toBlock)
+            return False
+
+    def sync_loop(self, waittime):
         while 1:
-            latest_block = self.web3.eth.getBlock("latest")
-            latest_block_hash = hexlify(latest_block["hash"])
-            latest_block_number = latest_block["number"]
-            self._load_data_from_sync()
-            # fromBlock = self.last_block_number + 1
-            fromBlock = self.last_confirmed_block_number + 1
-            toBlock = min(
-                latest_block_number,
-                self.last_confirmed_block_number + self.blocks_per_round,
-            )
-            last_confirmed_block_number = max(
-                min(toBlock, latest_block_number - self.required_confirmations), -1
-            )
-            if fromBlock <= toBlock and (
-                toBlock < latest_block_number
-                or latest_block_hash != self.latest_block_hash
-            ):
-                self._sync_blocks(
-                    fromBlock, toBlock, last_confirmed_block_number, latest_block_hash
-                )
-            else:
-                if stop_when_synced:
-                    return
-                logger.info("already synced up to latest block %s", toBlock)
-                time.sleep(waittime)
+            self.sync_until_current()
+            time.sleep(waittime)
 
     def sync_until_current(self):
-        self.sync_some_blocks(1000, stop_when_synced=True)
+        while self.sync_round():
+            pass
 
 
 @click.command()
@@ -263,7 +265,7 @@ def runsync(jsonrpc, waittime, startblock, required_confirmations):
                 s = Synchronizer(
                     conn, web3, "default", required_confirmations=required_confirmations
                 )
-                s.sync_some_blocks(waittime * 0.001)
+                s.sync_loop(waittime * 0.001)
         except Exception as e:
             logger.error(
                 "An error occured in runsync. Will restart runsync in 10 seconds",

@@ -9,7 +9,7 @@ from web3 import Web3
 from web3.providers.eth_tester import EthereumTesterProvider
 import attr
 from typing import List, Any
-from ethindex import logdecode
+from ethindex import logdecode, pgimport
 import eth_utils
 
 
@@ -152,3 +152,16 @@ class EventEmitter:
 @pytest.fixture
 def event_emitter(testenv):
     return EventEmitter(testenv)
+
+
+@pytest.fixture
+def synchronizer(testenv, conn):
+    pgimport.do_createtables(conn)
+    pgimport.do_importabi(
+        conn, testenv.addresses_json_path, testenv.contracts_json_path
+    )
+    pgimport.ensure_default_entry(conn)
+    synchronizer = pgimport.Synchronizer(
+        conn, testenv.web3, "default", required_confirmations=10
+    )
+    return synchronizer

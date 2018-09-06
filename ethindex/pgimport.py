@@ -202,7 +202,7 @@ class Synchronizer:
             )
         self.conn.commit()
 
-    def sync_some_blocks(self, waittime):
+    def sync_some_blocks(self, waittime, stop_when_synced=False):
         while 1:
             latest_block = self.web3.eth.getBlock("latest")
             latest_block_hash = hexlify(latest_block["hash"])
@@ -225,8 +225,13 @@ class Synchronizer:
                     fromBlock, toBlock, last_confirmed_block_number, latest_block_hash
                 )
             else:
+                if stop_when_synced:
+                    return
                 logger.info("already synced up to latest block %s", toBlock)
                 time.sleep(waittime)
+
+    def sync_until_current(self):
+        self.sync_some_blocks(1000, stop_when_synced=True)
 
 
 @click.command()

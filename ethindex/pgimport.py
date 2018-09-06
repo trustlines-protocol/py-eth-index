@@ -200,7 +200,6 @@ class Synchronizer:
                    WHERE syncid=%s""",
                 (toBlock, last_confirmed_block_number, latest_block_hash, self.syncid),
             )
-        self.conn.commit()
 
     def sync_round(self):
         latest_block = self.web3.eth.getBlock("latest")
@@ -221,10 +220,13 @@ class Synchronizer:
             self._sync_blocks(
                 fromBlock, toBlock, last_confirmed_block_number, latest_block_hash
             )
-            return True
+            finished = False
         else:
             logger.info("already synced up to latest block %s", toBlock)
-            return False
+            finished = True
+
+        self.conn.commit()
+        return finished
 
     def sync_loop(self, waittime):
         while 1:
@@ -232,7 +234,7 @@ class Synchronizer:
             time.sleep(waittime)
 
     def sync_until_current(self):
-        while self.sync_round():
+        while not self.sync_round():
             pass
 
 

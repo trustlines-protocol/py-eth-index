@@ -113,9 +113,13 @@ def insert_sync_entry(conn, syncid, addresses, start_block=-1):
 
     with conn.cursor() as cur:
         cur.execute(
-            """INSERT INTO SYNC (syncid, last_block_number, last_block_hash, addresses)
-               VALUES (%s, %s, %s, %s)""",
-            (syncid, start_block, "", list(addresses)),
+            """INSERT INTO SYNC (syncid,
+                                 last_block_number,
+                                 addresses,
+                                 last_confirmed_block_number,
+                                 latest_block_hash)
+               VALUES (%s, %s, %s, %s, %s)""",
+            (syncid, start_block, list(addresses), start_block, ""),
         )
 
 
@@ -134,13 +138,24 @@ def ensure_default_entry(conn, start_block=-1):
         insert_sync_entry(conn, "default", addresses, start_block=start_block)
 
 
+def delete_events(conn, fromBlock, toBlock, addresses):
+    with conn.cursor() as cur:
+        cur.execute(
+            """DELETE FROM events
+               WHERE blocknumber>=%s AND blocknumber<=%s
+                     AND address in %s""",
+            (fromBlock, toBlock, tuple(addresses)),
+        )
+
+
 class Synchronizer:
     blocks_per_round = 50000
 
-    def __init__(self, conn, web3, syncid):
+    def __init__(self, conn, web3, syncid, required_confirmations=10):
         self.conn = conn
         self.web3 = web3
         self.syncid = syncid
+        self.required_confirmations = required_confirmations
 
     def _load_data_from_sync(self):
         """load the current sync status for this job from the sync table
@@ -157,8 +172,12 @@ class Synchronizer:
                 self.conn, addresses=row["addresses"]
             )
             self.last_block_number = row["last_block_number"]
+            self.last_confirmed_block_number = row["last_confirmed_block_number"]
+            self.latest_block_hash = row["latest_block_hash"]
 
-    def _sync_blocks(self, fromBlock, toBlock):
+    def _sync_blocks(
+        self, fromBlock, toBlock, last_confirmed_block_number, latest_block_hash
+    ):
         events = get_events(self.web3, self.topic_index, fromBlock, toBlock)
         blocknumbers = event_blocknumbers(events)
         logger.info(
@@ -171,33 +190,57 @@ class Synchronizer:
         )
         blocks = [self.web3.eth.getBlock(x) for x in blocknumbers]
         enrich_events(events, blocks)
+        delete_events(self.conn, fromBlock, toBlock, self.topic_index.addresses)
         insert_events(self.conn, events)
 
         with self.conn.cursor() as cur:
             cur.execute(
-                """UPDATE sync SET last_block_number=%s where syncid=%s""",
-                (toBlock, self.syncid),
+                """UPDATE sync
+                   SET last_block_number=%s, last_confirmed_block_number=%s, latest_block_hash=%s
+                   WHERE syncid=%s""",
+                (toBlock, last_confirmed_block_number, latest_block_hash, self.syncid),
             )
         self.conn.commit()
 
-    def sync_some_blocks(self, waittime):
+    def sync_some_blocks(self, waittime, stop_when_synced=False):
         while 1:
             latest_block = self.web3.eth.getBlock("latest")
+            latest_block_hash = hexlify(latest_block["hash"])
             latest_block_number = latest_block["number"]
             self._load_data_from_sync()
-            fromBlock = self.last_block_number + 1
+            # fromBlock = self.last_block_number + 1
+            fromBlock = self.last_confirmed_block_number + 1
             toBlock = min(
-                latest_block_number, self.last_block_number + self.blocks_per_round
+                latest_block_number,
+                self.last_confirmed_block_number + self.blocks_per_round,
             )
-            if fromBlock <= toBlock:
-                self._sync_blocks(fromBlock, toBlock)
+            last_confirmed_block_number = max(
+                min(toBlock, latest_block_number - self.required_confirmations), -1
+            )
+            if fromBlock <= toBlock and (
+                toBlock < latest_block_number
+                or latest_block_hash != self.latest_block_hash
+            ):
+                self._sync_blocks(
+                    fromBlock, toBlock, last_confirmed_block_number, latest_block_hash
+                )
             else:
+                if stop_when_synced:
+                    return
                 logger.info("already synced up to latest block %s", toBlock)
                 time.sleep(waittime)
+
+    def sync_until_current(self):
+        self.sync_some_blocks(1000, stop_when_synced=True)
 
 
 @click.command()
 @click.option("--jsonrpc", help="jsonrpc URL to use", default="http://127.0.0.1:8545")
+@click.option(
+    "--required-confirmations",
+    help="number of confirmations until we consider a block final",
+    default=10,
+)
 @click.option(
     "--waittime",
     help="time to sleep in milliseconds waiting for a new block",
@@ -206,7 +249,7 @@ class Synchronizer:
 @click.option(
     "--startblock", help="Block from where events should be synced", default=-1
 )
-def runsync(jsonrpc, waittime, startblock):
+def runsync(jsonrpc, waittime, startblock, required_confirmations):
     logging.basicConfig(level=logging.INFO)
     logger.info("version %s starting", util.get_version())
 
@@ -217,7 +260,9 @@ def runsync(jsonrpc, waittime, startblock):
             web3 = Web3(Web3.HTTPProvider(jsonrpc, request_kwargs={"timeout": 60}))
             with connect("") as conn:
                 ensure_default_entry(conn)
-                s = Synchronizer(conn, web3, "default")
+                s = Synchronizer(
+                    conn, web3, "default", required_confirmations=required_confirmations
+                )
                 s.sync_some_blocks(waittime * 0.001)
         except Exception as e:
             logger.error(
@@ -273,8 +318,9 @@ def do_createtables(conn):
                   CREATE TABLE sync (
                     syncid TEXT NOT NULL PRIMARY KEY,
                     last_block_number INTEGER NOT NULL,
-                    last_block_hash TEXT NOT NULL,
-                    addresses TEXT[] NOT NULL
+                    addresses TEXT[] NOT NULL,
+                    last_confirmed_block_number INTEGER NOT NULL,
+                    latest_block_hash TEXT NOT NULL
                   );
 
                   CREATE TABLE abis (

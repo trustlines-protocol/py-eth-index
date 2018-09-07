@@ -109,7 +109,7 @@ table. These files are the exact files that the relay server also reads.
 Their location can be specified via the ``--addresses`` and
 ``-contracts`` command line arguments.
 
-Usgae:
+Usage:
 
 ::
 
@@ -135,15 +135,35 @@ Usage
     Usage: ethindex runsync [OPTIONS]
 
     Options:
-      --jsonrpc TEXT      jsonrpc URL to use
-      --waittime INTEGER  time to sleep in milliseconds waiting for a new block
-      --help              Show this message and exit.
+      --jsonrpc TEXT                  jsonrpc URL to use
+      --required-confirmations INTEGER
+                                      number of confirmations until we consider a
+                                      block final
+      --waittime INTEGER              time to sleep in milliseconds waiting for a
+                                      new block
+      --startblock INTEGER            Block from where events should be synced
+      --syncid TEXT                   syncid to use
+      --merge-with-syncid TEXT        syncid to merge with
+      --help                          Show this message and exit.
+
+Adding new contracts
+--------------------
+Import the contracts using the `ethindex importabi` command. Then synchronize
+these contracts and merge them with the `default` syncid with something like the
+following command::
+
+    ethindex runsync --syncid new --merge-with-syncid default
+
+This command will synchronize all contracts, which aren't already synchronized
+for the `default` syncid and will merge the `new` syncid into the `default`
+syncid, when both of them are fully synchronized with the chain. This means that
+a runsync job has to be running for `default`.
+
 
 Status and Limitations
 ----------------------
 
 - ethindex is alpha software.
-- there currently is no way to add more contracts to index
 
 Change log
 ----------

@@ -2,10 +2,11 @@
 Change Log
 ==========
 
-`0.2.0`_ (not release yet)
---------------------------
+`0.2.0`_ (not released yet)
+---------------------------
 * ethindex handles chain reorgs
 * the database schema has been changed. Please rebuild your database
+* new contracts can now be added
 
 `0.1.1`_ (2018-08-21)
 -----------------------

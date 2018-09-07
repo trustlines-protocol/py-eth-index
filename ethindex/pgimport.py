@@ -165,11 +165,14 @@ def delete_events(conn, fromBlock, toBlock, addresses):
 class Synchronizer:
     blocks_per_round = 50000
 
-    def __init__(self, conn, web3, syncid, required_confirmations=10):
+    def __init__(
+        self, conn, web3, syncid, required_confirmations=10, merge_with_syncid=None
+    ):
         self.conn = conn
         self.web3 = web3
         self.syncid = syncid
         self.required_confirmations = required_confirmations
+        self.merge_with_syncid = merge_with_syncid
 
     def _load_data_from_sync(self):
         """load the current sync status for this job from the sync table
@@ -215,6 +218,58 @@ class Synchronizer:
                 (toBlock, last_confirmed_block_number, latest_block_hash, self.syncid),
             )
 
+    def _try_merge(self, cur):
+        cur.execute(
+            """SELECT * FROM sync WHERE syncid in %s FOR UPDATE""",
+            ((self.merge_with_syncid, self.syncid),),
+        )
+        rows = cur.fetchall()
+
+        assert len(rows) == 2
+        if rows[0]["syncid"] == self.merge_with_syncid:
+            dst, src = rows
+        else:
+            src, dst = rows
+
+        block_diff = dst["last_block_number"] - src["last_block_number"]
+
+        if block_diff == 0:
+            if dst["latest_block_hash"] != src["latest_block_hash"]:
+                logger.info(
+                    "cannot merge runsync jobs, because they see a different state of the chain"
+                )
+                return False
+
+            logger.info(
+                "merging sync job %s into %s", self.syncid, self.merge_with_syncid
+            )
+            cur.execute(
+                """UPDATE sync
+                           SET addresses=%s
+                           WHERE syncid=%s""",
+                (dst["addresses"] + src["addresses"], self.merge_with_syncid),
+            )
+            cur.execute("delete from sync where syncid=%s", (self.syncid,))
+            return True
+        elif block_diff < 0:
+            logger.info(
+                "cannot merge runsync  jobs, we are %s blocks in front of %s",
+                -block_diff,
+                self.merge_with_syncid,
+            )
+        else:
+            logger.info(
+                "cannot merge runsync jobs, we are %s blocks behind %s",
+                block_diff,
+                self.merge_with_syncid,
+            )
+        return False
+
+    def try_merge(self):
+        with self.conn:
+            with self.conn.cursor() as cur:
+                return self._try_merge(cur)
+
     def sync_round(self):
         self._load_data_from_sync()
         latest_block = self.web3.eth.getBlock("latest")
@@ -246,6 +301,9 @@ class Synchronizer:
     def sync_loop(self, waittime):
         while 1:
             self.sync_until_current()
+            if self.merge_with_syncid and self.try_merge():
+                return
+
             time.sleep(waittime)
 
     def sync_until_current(self):
@@ -269,7 +327,10 @@ class Synchronizer:
     "--startblock", help="Block from where events should be synced", default=-1
 )
 @click.option("--syncid", help="syncid to use", default="default")
-def runsync(jsonrpc, waittime, startblock, required_confirmations, syncid):
+@click.option("--merge-with-syncid", help="syncid to merge with")
+def runsync(
+    jsonrpc, waittime, startblock, required_confirmations, syncid, merge_with_syncid
+):
     logging.basicConfig(level=logging.INFO)
     logger.info("version %s starting", util.get_version())
 
@@ -281,9 +342,14 @@ def runsync(jsonrpc, waittime, startblock, required_confirmations, syncid):
             with connect("") as conn:
                 ensure_sync_entry(conn, syncid)
                 s = Synchronizer(
-                    conn, web3, syncid, required_confirmations=required_confirmations
+                    conn,
+                    web3,
+                    syncid,
+                    required_confirmations=required_confirmations,
+                    merge_with_syncid=merge_with_syncid,
                 )
                 s.sync_loop(waittime * 0.001)
+                break
         except Exception as e:
             logger.error(
                 "An error occured in runsync. Will restart runsync in 10 seconds",

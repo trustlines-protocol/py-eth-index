@@ -173,6 +173,7 @@ class Synchronizer:
         self.syncid = syncid
         self.required_confirmations = required_confirmations
         self.merge_with_syncid = merge_with_syncid
+        self.last_fully_synced_block = -1
 
     def _load_data_from_sync(self):
         """load the current sync status for this job from the sync table
@@ -292,7 +293,9 @@ class Synchronizer:
             )
             finished = False
         else:
-            logger.info("already synced up to latest block %s", toBlock)
+            if self.last_fully_synced_block != toBlock:
+                self.last_fully_synced_block = toBlock
+                logger.info("already synced up to latest block %s", toBlock)
             finished = True
 
         self.conn.commit()

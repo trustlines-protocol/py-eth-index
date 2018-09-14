@@ -32,12 +32,14 @@ RUN pip install --disable-pip-version-check -c constraints.txt --no-binary=psyco
 RUN python -c 'import pkg_resources; print(pkg_resources.get_distribution("eth-index").version)' >/opt/ethindex/VERSION
 
 # copy the contents of the virtualenv from the intermediate container
-FROM ubuntu:18.04
+FROM ubuntu:18.04 as runner
 ENV LANG C.UTF-8
-COPY --from=builder /opt/ethindex /opt/ethindex
-WORKDIR /opt/ethindex
 RUN apt-get -y update \
     && apt-get install -y --no-install-recommends python3 python3-distutils libpq5 \
     && rm -rf /var/lib/apt/lists/* \
     && ln -s /opt/ethindex/bin/ethindex /usr/local/bin/
+
+FROM runner
+COPY --from=builder /opt/ethindex /opt/ethindex
+WORKDIR /opt/ethindex
 CMD ["/opt/ethindex/bin/ethindex"]

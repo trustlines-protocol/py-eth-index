@@ -2,6 +2,10 @@
 Change Log
 ==========
 
+`0.2.1`_ (2019-01-03)
+-----------------------
+* reduce log output when fully synced
+
 `0.2.0`_ (2018-09-07)
 -----------------------
 * ethindex handles chain reorgs
@@ -16,3 +20,4 @@ Change Log
 
 .. _0.1.1: https://github.com/trustlines-network/py-eth-index/compare/0.1.0...0.1.1
 .. _0.2.0: https://github.com/trustlines-network/py-eth-index/compare/0.1.1...0.2.0
+.. _0.2.1: https://github.com/trustlines-network/py-eth-index/compare/0.2.0...0.2.1

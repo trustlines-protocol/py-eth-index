@@ -210,6 +210,7 @@ workflows:
             <<: *tagged-filter
 
       - upload-pypi:
+          context: pypi-credentials
           requires:
             - run-flake8
             - run-black
@@ -226,6 +227,7 @@ workflows:
             <<: *tagged-filter
 
       - deploy-docker-image:
+          context: docker-credentials
           filters:
             <<: *tagged-filter
             branches:

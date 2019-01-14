@@ -42,4 +42,4 @@ RUN apt-get -y update \
 FROM runner
 COPY --from=builder /opt/ethindex /opt/ethindex
 WORKDIR /opt/ethindex
-CMD ["/opt/ethindex/bin/ethindex"]
+ENTRYPOINT ["/opt/ethindex/bin/ethindex"]

@@ -167,7 +167,7 @@ jobs:
       - run:
           name: Upload tagged release
           command: |
-            version=$(docker run --rm $LOCAL_IMAGE cat VERSION | tr '+' '_')
+            version=$(docker run --rm $LOCAL_IMAGE --version | tr '+' '_')
             echo "Tagging with $version"
             docker tag $LOCAL_IMAGE $DOCKER_REPO:$version
             docker push $DOCKER_REPO:$version

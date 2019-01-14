@@ -25,7 +25,7 @@ COPY ./requirements.txt requirements.txt
 # remove development dependencies from the end of the file
 RUN sed -i -e '/development dependencies/q' requirements.txt
 
-RUN pip install --disable-pip-version-check -c constraints.txt -r requirements.txt
+RUN pip install --disable-pip-version-check -c constraints.txt pip wheel setuptools
 
 COPY . /py-eth-index
 RUN pip install --disable-pip-version-check -c constraints.txt --no-binary=psycopg2 .

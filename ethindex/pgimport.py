@@ -353,7 +353,7 @@ def runsync(
                 )
                 s.sync_loop(waittime * 0.001)
                 break
-        except Exception as e:
+        except Exception:
             logger.error(
                 "An error occured in runsync. Will restart runsync in 10 seconds",
                 exc_info=sys.exc_info(),

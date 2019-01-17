@@ -1,0 +1,137 @@
+version: "3.2"
+services:
+  # the helper is only used to populate the shared volume
+  # please note that we are not able to use bind mounts on circleci unless we
+  # would use the machine images
+  helper:
+    image: ubuntu:18.04
+    container_name: e2e-helper
+    volumes:
+      - shared:/shared
+
+    command: ["true"]
+
+  relay:
+    image: trustlines/relay
+    container_name: relay
+    environment:
+      - TRUSTLINES_SYNC_TX_RELAY=1
+      - PGHOST
+      - PGUSER
+      - PGDATABASE
+      - PGPASSWORD
+    links:
+      - "parity:node"
+      - "postgres:db"
+    volumes:
+      - shared:/shared
+    ports:
+      - "127.0.0.1:5000:5000"
+    networks:
+      - internal
+    command: ["--config", "/shared/config.json", "--addresses", "/shared/addresses.json"]
+    restart: unless-stopped
+
+  index:
+    image: trustlines/py-eth-index
+    networks:
+      - internal
+    links:
+      - "postgres:db"
+      - "parity:node"
+    environment:
+      - PGHOST
+      - PGUSER
+      - PGDATABASE
+      - PGPASSWORD
+    restart: unless-stopped
+    command: runsync --jsonrpc http://node:8545 --waittime 200
+
+  createtables:
+    image: trustlines/py-eth-index
+    restart: on-failure
+    networks:
+      - internal
+    links:
+      - "postgres:db"
+    environment:
+      - PGHOST
+      - PGUSER
+      - PGDATABASE
+      - PGPASSWORD
+    command: createtables
+
+  init:
+    image: trustlines/py-eth-index
+    restart: on-failure
+    networks:
+      - internal
+    links:
+      - "postgres:db"
+      - createtables
+    environment:
+      - PGHOST
+      - PGUSER
+      - PGDATABASE
+      - PGPASSWORD
+    volumes:
+      - shared:/shared
+      - abi:/abi
+    command: importabi --contracts /abi/contracts.json --addresses /shared/addresses.json
+
+  postgres:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    networks:
+      - internal
+
+  parity:
+    image: parity/parity:stable
+    container_name: parity
+    restart: unless-stopped
+    networks:
+      - internal
+    expose:
+      - "8545"
+    volumes:
+      - shared:/shared
+    command: >
+      --config=dev-insecure
+      --jsonrpc-cors=*
+      --jsonrpc-interface=0.0.0.0
+      --unlock=0x00a329c0648769a73afac7f9381e08fb43dbea72
+      --password=/shared/parity-dev-pw
+
+  contracts:
+    image: trustlines/contracts
+    command: ["test", "--file", "/shared/addresses.json", "--jsonrpc", "http://node:8545"]
+    container_name: contracts
+    links:
+      - "parity:node"
+    volumes:
+      - shared:/shared
+      - type: volume
+        source: abi
+        target: /opt/contracts/trustlines-contracts/build
+        volume:
+          nocopy: false
+    networks:
+      - internal
+  e2e:
+    image: trustlines/e2e
+    container_name: e2e
+    networks:
+      - internal
+    links:
+      - "relay"
+
+networks:
+  internal:
+    external: false
+
+volumes:
+  abi:
+  shared:

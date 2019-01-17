@@ -175,6 +175,27 @@ jobs:
           command: |
             docker tag $LOCAL_IMAGE $DOCKER_REPO:latest
             docker push $DOCKER_REPO:latest
+  run-end2end-tests:
+    executor: ubuntu-builder
+    environment:
+      DOCKER_REPO: trustlines/py-eth-index
+      LOCAL_IMAGE: index
+    working_directory: ~/repo
+    steps:
+      - setup_remote_docker
+      - checkout
+      - attach_workspace:
+          at: '~'
+      - run:
+          name: Load docker image
+          command: |
+            docker load --input ~/images/$LOCAL_IMAGE.tar
+      - run:
+          name: run end2end tests
+          command: |
+            docker tag $LOCAL_IMAGE $DOCKER_REPO
+            cd tests/end2end
+            ./run.sh
 
 workflows:
   version: 2
@@ -224,6 +245,12 @@ workflows:
       - build-docker-image:
           filters:
             <<: *tagged-filter
+
+      - run-end2end-tests:
+          filters:
+            <<: *tagged-filter
+          requires:
+            - build-docker-image
 
       - deploy-docker-image:
           context: docker-credentials

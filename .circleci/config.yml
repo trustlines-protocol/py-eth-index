@@ -183,9 +183,12 @@ jobs:
     working_directory: ~/repo
     steps:
       - setup_remote_docker
-      - checkout
       - attach_workspace:
           at: '~'
+      - run:
+          name: Checkout end2end repo
+          command: |
+            git clone https://github.com/trustlines-network/end2end.git
       - run:
           name: Load docker image
           command: |
@@ -194,8 +197,8 @@ jobs:
           name: run end2end tests
           command: |
             docker tag $LOCAL_IMAGE $DOCKER_REPO
-            cd tests/end2end
-            ./run.sh
+            cd end2end
+            ./run-e2e.sh
 
 workflows:
   version: 2

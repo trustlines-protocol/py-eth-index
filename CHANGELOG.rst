@@ -4,7 +4,7 @@ Change Log
 
 `0.3.0`_ (2019-01-14)
 ---------------------
-- `ethindex --version` will now print the current version of tl-watch
+- `ethindex --version` will now print the current version of ethindex.
 - `ethindex` has been set as entrypoint in the docker executable. Beware, this
   is a breaking change.
 

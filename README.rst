@@ -170,8 +170,7 @@ Change log
 
 See `CHANGELOG <https://github.com/trustlines-network/py-eth-index/blob/develop/CHANGELOG.rst>`_.
 
-
-.. |Build Status| image:: https://travis-ci.org/trustlines-network/py-eth-index.svg?branch=develop
-   :target: https://travis-ci.org/trustlines-network/py-eth-index
+.. |Build Status| image:: https://circleci.com/gh/trustlines-network/py-eth-index/tree/develop.svg?style=svg
+    :target: https://circleci.com/gh/trustlines-network/py-eth-index/tree/develop
 .. |Code style: black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/ambv/black

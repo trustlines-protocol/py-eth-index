@@ -54,6 +54,10 @@ jobs:
           command: |
             pip install -c constraints.txt -e .
       - run:
+          name: Verify installed packages have compatible dependencies
+          command: |
+            pip check
+      - run:
           name: Build distribution
           command: |
             python setup.py sdist

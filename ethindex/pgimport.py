@@ -378,8 +378,18 @@ def do_importabi(conn, addresses, contracts):
 
 
 @click.command()
-@click.option("--addresses", default="addresses.json")
-@click.option("--contracts", default="contracts.json")
+@click.option(
+    "--addresses",
+    default="./addresses.json",
+    show_default=True,
+    type=click.Path(exists=True, dir_okay=False),
+)
+@click.option(
+    "--contracts",
+    default="./contracts.json",
+    show_default=True,
+    type=click.Path(exists=True, dir_okay=False),
+)
 def importabi(addresses, contracts):
     logging.basicConfig(level=logging.INFO)
     logger.info("version %s starting", util.get_version())

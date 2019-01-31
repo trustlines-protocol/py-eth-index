@@ -1,9 +1,9 @@
 repos:
--   repo: https://github.com/ambv/black
-    rev: 18.9b0
-    hooks:
-    - id: black
-      language_version: python3.6
+- repo: https://github.com/ambv/black
+  rev: 18.9b0
+  hooks:
+  - id: black
+    language_version: python3.6
 
 -   repo: git://github.com/pre-commit/pre-commit-hooks
     sha: v2.0.0
@@ -28,10 +28,8 @@ repos:
     language_version: python3.6
     additional_dependencies: ["flake8-string-format"]
 
--   repo: git://github.com/luismayta/pre-commit-mypy
-    sha: '0.1.1'
-    hooks:
-    -   id: mypy
-        args:
-        - --scripts-are-modules
-        - --ignore-missing-imports
+- repo: git://github.com/luismayta/pre-commit-mypy
+  sha: '0.1.1'
+  hooks:
+  - id: mypy
+    args: ["--scripts-are-modules", "--ignore-missing-imports"]

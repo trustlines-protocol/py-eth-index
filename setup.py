@@ -24,7 +24,7 @@ setup(
     description="Indexer for the ethereum blockchain",
     long_description=long_description,
     # The project's main homepage.
-    url="https://github.com/trustlines-network/py-eth-index",
+    url="https://github.com/trustlines-protocol/py-eth-index",
     # Author details
     author="Trustlines-Network",
     author_email="contact@brainbot.com",

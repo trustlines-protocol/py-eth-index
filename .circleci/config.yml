@@ -52,7 +52,7 @@ jobs:
       - run:
           name: Install package
           command: |
-            pip install -c constraints.txt -e .
+            pip install -c constraints.txt .
       - run:
           name: Verify installed packages have compatible dependencies
           command: |

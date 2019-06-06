@@ -58,7 +58,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=["web3>=4.4.1", "psycopg2>=2.7,<2.8", "click", "attrs"],
+    install_requires=["web3>=4.4.1", "psycopg2>=2.7", "click", "attrs"],
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:

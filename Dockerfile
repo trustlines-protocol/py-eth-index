@@ -18,17 +18,16 @@ RUN python3 -m venv /opt/ethindex
 ENV PATH "/opt/ethindex/bin:${PATH}"
 
 WORKDIR /py-eth-index
-RUN pip install --disable-pip-version-check pip==18.0
 
 COPY ./constraints.txt constraints.txt
+RUN pip install -c constraints.txt --disable-pip-version-check pip wheel setuptools
+
 COPY ./requirements.txt requirements.txt
 # remove development dependencies from the end of the file
 RUN sed -i -e '/development dependencies/q' requirements.txt
 
-RUN pip install --disable-pip-version-check -c constraints.txt pip wheel setuptools
-
 COPY . /py-eth-index
-RUN pip install --disable-pip-version-check -c constraints.txt --no-binary=psycopg2 .
+RUN pip install --disable-pip-version-check -c constraints.txt .
 RUN python -c 'import pkg_resources; print(pkg_resources.get_distribution("eth-index").version)' >/opt/ethindex/VERSION
 
 # copy the contents of the virtualenv from the intermediate container

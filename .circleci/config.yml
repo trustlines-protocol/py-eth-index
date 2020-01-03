@@ -91,7 +91,7 @@ jobs:
       - run:
           name: Run flake8
           command: |
-            flake8 print-logs run-query setup.py ethindex tests
+            flake8 print-logs run-query setup.py src tests
 
   run-black:
     executor: ubuntu-builder
@@ -102,7 +102,7 @@ jobs:
       - run:
           name: Run black
           command: |
-            black --check print-logs run-query setup.py ethindex tests
+            black --check print-logs run-query setup.py src tests
 
   run-pytest:
     executor: ubuntu-builder
@@ -124,7 +124,7 @@ jobs:
       - run:
           name: Run mypy
           command: |
-            mypy --ignore-missing-imports ethindex tests
+            mypy --ignore-missing-imports src tests
 
   build-docker-image:
     executor: ubuntu-builder

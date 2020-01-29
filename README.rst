@@ -42,18 +42,18 @@ This installs black, flake8, mypy and tox among other things.
 
 black
 ~~~~~
-The source code is formatted with `black <https://github.com/ambv/black>`__. If
+The source code is formatted with `black <https://github.com/psf/black>`__. If
 you choose not to use the pre-commit hook, you should be able to format the
-source code with ``black setup.py ethindex``.
+source code with ``black setup.py src``.
 
 flake8
 ~~~~~~
-We use flake8 to check for errors. Run ``flake8 ethindex`` to check for errors.
+We use flake8 to check for errors. Run ``flake8 src`` to check for errors.
 
 mypy
 ~~~~
 mypy is used to check for type errors. Run ``mypy --ignore-missing-imports
-ethindex`` to check manually.
+src`` to check manually.
 
 tox
 ~~~
@@ -69,9 +69,9 @@ database.
 pre-commit
 ~~~~~~~~~~
 
-The repository comes with a configuration file for
-`pre-commit <https://pre-commit.com/>`__. We recommend using pipsi for
-installation of pre-commit. After installation of pre-commit, the git
+The repository comes with a configuration file for `pre-commit
+<https://pre-commit.com/>`__. pre-commit will be installed as part of
+the development dependencies specified in requirements.txt. The git
 commit hooks can be activated with ``pre-commit install`` inside the
 py-eth-index repository.
 
@@ -85,7 +85,7 @@ Then run
 
 ::
 
-    psql -f create-table.sql
+   ethindex createtables
 
 to create the database tables.
 
@@ -173,4 +173,4 @@ See `CHANGELOG <https://github.com/trustlines-protocol/py-eth-index/blob/develop
 .. |Build Status| image:: https://circleci.com/gh/trustlines-protocol/py-eth-index/tree/develop.svg?style=svg
     :target: https://circleci.com/gh/trustlines-protocol/py-eth-index/tree/develop
 .. |Code style: black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-   :target: https://github.com/ambv/black
+   :target: https://github.com/psf/black

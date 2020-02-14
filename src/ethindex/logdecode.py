@@ -6,12 +6,13 @@ See https://codeburst.io/deep-dive-into-ethereum-logs-a8d2047c7371 for a nice
 explanation.
 """
 
-import hexbytes
-import eth_abi
 import itertools
-import eth_utils
+from typing import Any, Dict, List, Optional
+
 import attr
-from typing import List, Any, Dict, Optional
+import eth_abi
+import eth_utils
+import hexbytes
 
 
 def replace_with_checksum_address(values: List[Any], types: List[str]) -> List[Any]:

@@ -1,16 +1,18 @@
 """import ethereum events into postgres
 """
-import sys
+import binascii
 import json
+import logging
+import sys
 import time
-from web3 import Web3
+from typing import Iterable
+
+import click
 import psycopg2
 import psycopg2.extras
-import binascii
-import logging
-import click
+from web3 import Web3
+
 from ethindex import logdecode, util
-from typing import Iterable
 
 logger = logging.getLogger(__name__)
 # https://github.com/ethereum/wiki/wiki/JavaScript-API#web3ethgettransactionreceipt

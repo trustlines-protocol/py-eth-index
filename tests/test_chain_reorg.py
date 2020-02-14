@@ -1,7 +1,8 @@
 """test that chain reorgs are handled"""
 
-import pytest
 import logging
+
+import pytest
 
 
 def fetch_events(conn):

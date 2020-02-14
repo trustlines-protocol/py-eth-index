@@ -1,16 +1,18 @@
-import os
 import json
-import testing.postgresql
-import pytest
+import os
+from typing import Any, List
+
+import attr
+import eth_tester
+import eth_utils
 import psycopg2
 import psycopg2.extras
-import eth_tester
+import pytest
+import testing.postgresql
 from web3 import Web3
 from web3.providers.eth_tester import EthereumTesterProvider
-import attr
-from typing import List, Any
+
 from ethindex import logdecode, pgimport
-import eth_utils
 
 
 @pytest.fixture(scope="session")

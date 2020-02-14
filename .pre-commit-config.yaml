@@ -32,3 +32,9 @@ repos:
   hooks:
   - id: mypy
     args: ["--scripts-are-modules", "--ignore-missing-imports"]
+
+- repo: https://github.com/pre-commit/mirrors-isort
+  rev: v4.3.21
+  hooks:
+    - id: isort
+      args: ["--ignore-whitespace", "--settings-path", "./", "--recursive"]

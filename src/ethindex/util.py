@@ -1,5 +1,5 @@
-import pkg_resources
+import importlib_metadata
 
 
 def get_version():
-    return pkg_resources.get_distribution("eth-index").version
+    return importlib_metadata.version("eth-index")

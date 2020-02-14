@@ -28,7 +28,7 @@ RUN sed -i -e '/development dependencies/q' requirements.txt
 
 COPY . /py-eth-index
 RUN pip install --disable-pip-version-check -c constraints.txt .
-RUN python -c 'import pkg_resources; print(pkg_resources.get_distribution("eth-index").version)' >/opt/ethindex/VERSION
+RUN python -c 'import importlib_metadata; print(importlib_metadata.version("eth-index"))' >/opt/ethindex/VERSION
 
 # copy the contents of the virtualenv from the intermediate container
 FROM ubuntu:18.04 as runner

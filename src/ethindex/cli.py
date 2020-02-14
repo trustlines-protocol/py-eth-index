@@ -1,11 +1,11 @@
 import click
-import pkg_resources
 
 import ethindex.pgimport
+import ethindex.util
 
 
 def report_version():
-    click.echo(pkg_resources.get_distribution("eth-index").version)
+    click.echo(ethindex.util.get_version())
 
 
 @click.group(invoke_without_command=True)

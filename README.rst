@@ -168,7 +168,7 @@ Status and Limitations
 Change log
 ----------
 
-See `CHANGELOG <https://github.com/trustlines-protocol/py-eth-index/blob/develop/CHANGELOG.rst>`_.
+See `CHANGELOG <https://github.com/trustlines-protocol/py-eth-index/blob/master/CHANGELOG.rst>`_.
 
 .. |Build Status| image:: https://circleci.com/gh/trustlines-protocol/py-eth-index/tree/develop.svg?style=svg
     :target: https://circleci.com/gh/trustlines-protocol/py-eth-index/tree/develop

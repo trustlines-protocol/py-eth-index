@@ -2,6 +2,16 @@
 Change Log
 ==========
 
+`0.3.2`_ (2020-02-14)
+---------------------
+- Switch to a src based layout
+- Update all dependencies
+
+`0.3.1`_ (2019-04-03)
+---------------------
+- transfer copyright to trustlines foundation
+- run end2end tests on circleci
+
 `0.3.0`_ (2019-01-14)
 ---------------------
 - `ethindex --version` will now print the current version of ethindex.
@@ -28,3 +38,5 @@ Change Log
 .. _0.2.0: https://github.com/trustlines-protocol/py-eth-index/compare/0.1.1...0.2.0
 .. _0.2.1: https://github.com/trustlines-protocol/py-eth-index/compare/0.2.0...0.2.1
 .. _0.3.0: https://github.com/trustlines-protocol/py-eth-index/compare/0.2.1...0.3.0
+.. _0.3.1: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.0...0.3.1
+.. _0.3.2: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.1...0.3.2

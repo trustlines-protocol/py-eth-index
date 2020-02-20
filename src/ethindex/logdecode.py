@@ -13,6 +13,7 @@ import attr
 import eth_abi
 import eth_utils
 import hexbytes
+from eth_hash.auto import keccak
 
 
 def replace_with_checksum_address(values: List[Any], types: List[str]) -> List[Any]:
@@ -87,6 +88,10 @@ class Event:
     timestamp: Optional[int]
 
     @property
+    def id(self):
+        return keccak(self.transactionhash + self.blockhash + bytes([self.logindex]))
+
+    @property
     def blocknumber(self):
         return self.log["blockNumber"]
 
@@ -113,7 +118,7 @@ class Event:
 
 class TopicIndex:
     def __init__(self, address2abi):
-        """build a TopicIndex from an contract address to ABI dict"""
+        """build a TopicIndex from an contract address to ABI dict."""
         self.addresses = list(address2abi.keys())
         self.address2abi = address2abi
         self.address_topic2event_abi = {}

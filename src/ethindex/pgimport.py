@@ -62,7 +62,8 @@ def bytesArgsToHex(args):
 def insert_event(cur, event: logdecode.Event) -> None:
     event.args = bytesArgsToHex(event.args)
     cur.execute(
-        """INSERT INTO events (transactionHash,
+        """INSERT INTO events (id,
+                                       transactionHash,
                                        blockNumber,
                                        address,
                                        eventName,
@@ -71,8 +72,9 @@ def insert_event(cur, event: logdecode.Event) -> None:
                                        transactionIndex,
                                        logIndex,
                                        timestamp)
-                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
         (
+            hexlify(event.id),
             hexlify(event.transactionhash),
             event.blocknumber,
             event.address,
@@ -404,6 +406,7 @@ def do_createtables(conn):
             cur.execute(
                 """
                 CREATE TABLE events (
+                     id TEXT UNIQUE,
                      transactionHash TEXT NOT NULL,
                      blockNumber INTEGER NOT NULL,
                      address TEXT NOT NULL,

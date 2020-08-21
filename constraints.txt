@@ -11,7 +11,7 @@ cfgv==2.0.1
 chardet==3.0.4
 Click==7.0
 coverage==4.5.4
-cytoolz==0.10.0
+cytoolz==0.10.1
 entrypoints==0.3
 eth-abi==2.0.0
 eth-account==0.4.0

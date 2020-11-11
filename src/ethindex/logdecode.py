@@ -111,6 +111,14 @@ class Event:
         return self.log["logIndex"]
 
 
+@attr.s(auto_attribs=True)
+class GraphUpdate:
+    name: str
+    args: Dict
+    address: str
+    timestamp: Optional[int]
+
+
 class TopicIndex:
     def __init__(self, address2abi):
         """build a TopicIndex from an contract address to ABI dict"""

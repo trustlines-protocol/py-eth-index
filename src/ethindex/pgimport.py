@@ -1,23 +1,21 @@
 """import ethereum events into postgres
 """
 import binascii
+import copy
 import json
 import logging
-import math
 import sys
 import time
 from typing import Iterable, Union
-import copy
 
-import attr
 import click
-from ethindex.logdecode import Event, GraphUpdate
 import psycopg2
 import psycopg2.extras
 from psycopg2 import sql
 from web3 import Web3
 
 from ethindex import logdecode, util
+from ethindex.logdecode import Event, GraphUpdate
 
 logger = logging.getLogger(__name__)
 # https://github.com/ethereum/wiki/wiki/JavaScript-API#web3ethgettransactionreceipt
@@ -71,7 +69,8 @@ def insert_event(cur, event: logdecode.Event) -> None:
     event.args = bytesArgsToHex(event.args)
 
     cur.execute(
-        sql.SQL("""INSERT INTO events (
+        sql.SQL(
+            """INSERT INTO events (
                 transactionHash,
                 blockNumber,
                 address,
@@ -82,7 +81,8 @@ def insert_event(cur, event: logdecode.Event) -> None:
                 logIndex,
                 timestamp
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""),
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+        ),
         [
             hexlify(event.transactionhash),
             event.blocknumber,
@@ -93,11 +93,13 @@ def insert_event(cur, event: logdecode.Event) -> None:
             event.transactionindex,
             event.logindex,
             event.timestamp,
-        ]
+        ],
     )
 
 
-def insert_graph_feed_updates(cur, feed_updates: Iterable[Union[Event, GraphUpdate]]) -> None:
+def insert_graph_feed_updates(
+    cur, feed_updates: Iterable[Union[Event, GraphUpdate]]
+) -> None:
     for feed_update in feed_updates:
         feed_update.args = bytesArgsToHex(feed_update.args)
 
@@ -197,10 +199,18 @@ def delete_events(conn, fromBlock, addresses):
 
 
 def filter_events_for_graph(events):
-    return [event for event in events if event.name in ["TrustlineUpdate", "BalanceUpdate"]]
+    return [
+        event for event in events if event.name in ["TrustlineUpdate", "BalanceUpdate"]
+    ]
+
 
 def build_graph_update_from_row(row):
-    return GraphUpdate(name=row["event"], address=row["address"], args=row['args'], timestamp=row['timestamp'])
+    return GraphUpdate(
+        name=row["event"],
+        address=row["address"],
+        args=row["args"],
+        timestamp=row["timestamp"],
+    )
 
 
 def null_replacing_graph_update(event: Event) -> GraphUpdate:
@@ -216,12 +226,19 @@ def null_replacing_graph_update(event: Event) -> GraphUpdate:
             "_creditlineReceived": 0,
             "_interestRateGiven": 0,
             "_interestRateReceived": 0,
-            "_isFrozen": False
+            "_isFrozen": False,
         }
     else:
-        raise RuntimeError(f"Tried to compute empty event of unexpected type {event.name}")
+        raise RuntimeError(
+            f"Tried to compute empty event of unexpected type {event.name}"
+        )
 
-    return GraphUpdate(name=event.name, args=null_event_args, address=event.address, timestamp=event.timestamp)
+    return GraphUpdate(
+        name=event.name,
+        args=null_event_args,
+        address=event.address,
+        timestamp=event.timestamp,
+    )
 
 
 class Synchronizer:
@@ -285,24 +302,44 @@ class Synchronizer:
 
     def update_graph_feed(self, events_for_graph):
         events_for_graph = filter_events_for_graph(events_for_graph)
-        current_unfinalized_events = self.remove_finalized_events(self.unfinalized_graph_events)
+        current_unfinalized_events = self.remove_finalized_events(
+            self.unfinalized_graph_events
+        )
 
-        missing_events = [event for event in current_unfinalized_events if event not in events_for_graph]
-        added_events = [event for event in events_for_graph if event not in current_unfinalized_events]
+        missing_events = [
+            event
+            for event in current_unfinalized_events
+            if event not in events_for_graph
+        ]
+        added_events = [
+            event
+            for event in events_for_graph
+            if event not in current_unfinalized_events
+        ]
 
-        graph_updates = added_events + self.get_graph_update_for_missing_events(missing_events)
+        graph_updates = added_events + self.get_graph_update_for_missing_events(
+            missing_events
+        )
         self.feed_graph_updates(graph_updates)
 
         self.unfinalized_graph_events = events_for_graph
 
     def remove_finalized_events(self, events: Iterable[Event]):
-        return [event for event in events if event.blocknumber > self.last_confirmed_block_number]
+        return [
+            event
+            for event in events
+            if event.blocknumber > self.last_confirmed_block_number
+        ]
 
-    def get_graph_update_for_missing_events(self, missing_events) -> Iterable[GraphUpdate]:
+    def get_graph_update_for_missing_events(
+        self, missing_events
+    ) -> Iterable[GraphUpdate]:
         graph_updates_to_feed = []
 
         for event in missing_events:
-            graph_updates_to_feed.append(self.find_replacing_graph_update_for_missing(event))
+            graph_updates_to_feed.append(
+                self.find_replacing_graph_update_for_missing(event)
+            )
         return graph_updates_to_feed
 
     def find_replacing_graph_update_for_missing(self, event: Event) -> GraphUpdate:
@@ -326,29 +363,39 @@ class Synchronizer:
             from_ = "_creditor"
             to = "_debtor"
         else:
-            raise RuntimeError(f"Tried to find previous event for event of unexpected type {event.name}")
+            raise RuntimeError(
+                f"Tried to find previous event for event of unexpected type {event.name}"
+            )
 
         query = sql.SQL(
-            query_select +
-            "WHERE ((args->>{from_}=%s AND args->>{to}=%s) OR (args->>{from_}=%s AND args->>{to}=%s)) AND eventName=%s AND address=%s" +
-            query_order
-        ).format(
-            from_=sql.Literal(from_),
-            to=sql.Literal(to),
-        )
-        query_params = [event.args[from_], event.args[to], event.args[to], event.args[from_], event.name, event.address]
+            query_select + "WHERE ((args->>{from_}=%s AND args->>{to}=%s) OR "
+            "(args->>{from_}=%s AND args->>{to}=%s)) "
+            "AND eventName=%s AND address=%s" + query_order
+        ).format(from_=sql.Literal(from_), to=sql.Literal(to))
+        query_params = [
+            event.args[from_],
+            event.args[to],
+            event.args[to],
+            event.args[from_],
+            event.name,
+            event.address,
+        ]
 
         with self.conn as conn:
             with conn.cursor() as cur:
                 cur.execute(query, query_params)
                 rows = cur.fetchall()
-                assert len(rows) <= 1, "Found multiple rows when querying database for single previous event"
+                assert (
+                    len(rows) <= 1
+                ), "Found multiple rows when querying database for single previous event"
                 if len(rows) == 1:
                     return build_graph_update_from_row(rows[0])
                 else:
                     return null_replacing_graph_update(event)
 
-    def feed_graph_updates(self, graph_feed_updates: Iterable[Union[Event, GraphUpdate]]):
+    def feed_graph_updates(
+        self, graph_feed_updates: Iterable[Union[Event, GraphUpdate]]
+    ):
         with self.conn.cursor() as cur:
             insert_graph_feed_updates(cur, graph_feed_updates)
 
@@ -559,7 +606,7 @@ def do_createtables(conn):
                     contract_address TEXT NOT NULL PRIMARY KEY,
                     abi JSONB NOT NULL
                   );
-                  
+
                   CREATE TABLE graphfeed (
                     address TEXT NOT NULL,
                     eventName TEXT NOT NULL,

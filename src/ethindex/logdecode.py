@@ -64,7 +64,7 @@ def decode_non_indexed_inputs(abi, log):
 def decode_indexed_inputs(abi, log):
     """decode indexed inputs from a log entry
 
-    This one decodes the values stored in in topics fields (without topic 0)"""
+    This one decodes the values stored in topics fields (without topic 0)"""
     inputs = [input_ for input_ in abi["inputs"] if input_["indexed"]]
     types = [input_["type"] for input_ in inputs]
     names = [input_["name"] for input_ in inputs]
@@ -79,12 +79,12 @@ def get_event_abis(abi):
     return [some_abi for some_abi in abi if some_abi["type"] == "event"]
 
 
-@attr.s(auto_attribs=True)
+@attr.s(cmp=False)
 class Event:
-    name: str
-    args: Dict
-    log: Dict
-    timestamp: Optional[int]
+    name = attr.ib(type=str)
+    args = attr.ib(type=Dict)
+    log = attr.ib(type=Dict)
+    timestamp = attr.ib(type=Optional[int])
 
     @property
     def blocknumber(self):
@@ -109,6 +109,24 @@ class Event:
     @property
     def logindex(self):
         return self.log["logIndex"]
+
+    def __eq__(self, other):
+        if type(other) != type(self):
+            return False
+        # When comparing events (e.g. figuring out new or missing events due to reorg)
+        # We don't compare the exact log, but match other attributes.
+        # This is useful for events reconstructed from the database where the full log is not stored.
+        compared_attributes = set(
+            attribute for attribute in dir(self) if not attribute.startswith("_")
+        )
+        compared_attributes.remove("log")
+        for attribute in compared_attributes:
+            if self.__getattribute__(attribute) != other.__getattribute__(attribute):
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 @attr.s(auto_attribs=True)

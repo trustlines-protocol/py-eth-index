@@ -6,11 +6,12 @@ import json
 import logging
 import sys
 import time
-from typing import Iterable, Union
+from typing import Iterable, List, Union
 
 import click
 import psycopg2
 import psycopg2.extras
+from hexbytes import HexBytes
 from psycopg2 import sql
 from web3 import Web3
 
@@ -188,14 +189,16 @@ def ensure_default_entry(conn, start_block=-1):
     ensure_sync_entry(conn, "default", start_block=start_block)
 
 
-def delete_events(conn, fromBlock, addresses):
+def delete_events(conn, fromBlock, addresses) -> List[Event]:
     with conn.cursor() as cur:
         cur.execute(
             """DELETE FROM events
                WHERE blocknumber>=%s
-                     AND address in %s""",
+                     AND address in %s RETURNING *""",
             (fromBlock, tuple(addresses)),
         )
+        deleted_rows = cur.fetchall()
+    return [build_event_from_row(row) for row in deleted_rows]
 
 
 def filter_events_for_graph(events):
@@ -209,6 +212,22 @@ def build_graph_update_from_row(row):
         name=row["event"],
         address=row["address"],
         args=row["args"],
+        timestamp=row["timestamp"],
+    )
+
+
+def build_event_from_row(row):
+    return Event(
+        name=row["eventname"],
+        args=row["args"],
+        log={
+            "blockNumber": row["blocknumber"],
+            "blockHash": HexBytes(row["blockhash"]),
+            "transactionHash": HexBytes(row["transactionhash"]),
+            "address": row["address"],
+            "transactionIndex": row["transactionindex"],
+            "logIndex": row["logindex"],
+        },
         timestamp=row["timestamp"],
     )
 
@@ -288,9 +307,9 @@ class Synchronizer:
         )
         blocks = [self.web3.eth.getBlock(x) for x in blocknumbers]
         enrich_events(events, blocks)
-        delete_events(self.conn, fromBlock, self.topic_index.addresses)
+        deleted_events = delete_events(self.conn, fromBlock, self.topic_index.addresses)
         insert_events(self.conn, events)
-        self.update_graph_feed(events)
+        self.update_graph_feed(events, deleted_events)
 
         with self.conn.cursor() as cur:
             cur.execute(
@@ -300,29 +319,17 @@ class Synchronizer:
                 (toBlock, last_confirmed_block_number, latest_block_hash, self.syncid),
             )
 
-    def update_graph_feed(self, events_for_graph):
-        events_for_graph = filter_events_for_graph(events_for_graph)
-        current_unfinalized_events = self.remove_finalized_events(
-            self.unfinalized_graph_events
-        )
+    def update_graph_feed(self, new_events, old_events):
+        new_events = filter_events_for_graph(new_events)
+        old_events = filter_events_for_graph(old_events)
 
-        missing_events = [
-            event
-            for event in current_unfinalized_events
-            if event not in events_for_graph
-        ]
-        added_events = [
-            event
-            for event in events_for_graph
-            if event not in current_unfinalized_events
-        ]
+        missing_events = [event for event in old_events if event not in new_events]
+        added_events = [event for event in new_events if event not in old_events]
 
         graph_updates = added_events + self.get_graph_update_for_missing_events(
             missing_events
         )
         self.feed_graph_updates(graph_updates)
-
-        self.unfinalized_graph_events = events_for_graph
 
     def remove_finalized_events(self, events: Iterable[Event]):
         return [

@@ -1,6 +1,11 @@
 ==========
 Change Log
 ==========
+`0.3.4`_ (2020-12-18)
+---------------------
+- Use events from database to figure out sent events to relay instead of memory.
+  That makese graph sync feature safe on restart of the indexer
+
 `0.3.3`_ (2020-12-14)
 ---------------------
 - Add table `graphfeed` populated with graph updates for the relay to sync its graph with

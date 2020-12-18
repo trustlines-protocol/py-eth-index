@@ -50,3 +50,4 @@ Change Log
 .. _0.3.1: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.0...0.3.1
 .. _0.3.2: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.1...0.3.2
 .. _0.3.3: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.2...0.3.3
+.. _0.3.4: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.3...0.3.4

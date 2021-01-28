@@ -44,3 +44,20 @@ def test_topic_index_from_db(testenv, event_emitter, conn):
     events3 = pgimport.get_events(testenv.web3, topic_index3, 0, "latest")
     assert events1 == events2
     assert events1 == events3
+
+
+def test_should_not_crash_on_unknown_event(testenv, event_emitter, conn):
+    """Test that the indexer will not emit an error when an unknown event is emitted from an indexed address"""
+    for abi_element in testenv.abi:
+        if abi_element["type"] == "event":
+            assert (
+                abi_element["name"] != "UnknownAbiEvent"
+            ), "Remove the UnknownAbiEvent from the abi to run this test properly."
+
+    event_emitter.add_unknown_abi_events()
+    pgimport.do_createtables(conn)
+    pgimport.do_importabi(
+        conn, testenv.addresses_json_path, testenv.contracts_json_path
+    )
+
+    pgimport.get_events(testenv.web3, testenv.topic_index, 0, "latest")

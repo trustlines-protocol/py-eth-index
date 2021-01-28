@@ -2,30 +2,7 @@
     "CurrencyNetwork": {
         "abi": [
             {
-                "constant": false,
-                "inputs": [
-                    {
-                        "name": "_from",
-                        "type": "address"
-                    },
-                    {
-                        "name": "_to",
-                        "type": "address"
-                    },
-                    {
-                        "name": "_value",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "makeTransfer",
-                "outputs": [],
-                "payable": false,
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
                 "inputs": [],
-                "payable": false,
                 "stateMutability": "nonpayable",
                 "type": "constructor"
             },
@@ -34,62 +11,73 @@
                 "inputs": [
                     {
                         "indexed": true,
+                        "internalType": "address",
                         "name": "_from",
                         "type": "address"
                     },
                     {
                         "indexed": true,
+                        "internalType": "address",
                         "name": "_to",
                         "type": "address"
                     },
                     {
                         "indexed": false,
+                        "internalType": "uint256",
                         "name": "_value",
                         "type": "uint256"
                     }
                 ],
                 "name": "Transfer",
                 "type": "event"
+            },
+            {
+                "inputs": [],
+                "name": "emitUnknownAbiEvent",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_from",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_to",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "_value",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "makeTransfer",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
             }
         ],
-        "bytecode": "0x608060405234801561001057600080fd5b50610149806100206000396000f300608060405260043610610041576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063a6e4915414610046575b600080fd5b34801561005257600080fd5b506100b1600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803590602001909291905050506100b3565b005b8173ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff167fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef836040518082815260200191505060405180910390a35050505600a165627a7a72305820136dff3039c4b0f03151bf1868a30b9cbdd2e368936019903155461c7c3bab560029",
-        "bytecode_runtime": "0x608060405260043610610041576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063a6e4915414610046575b600080fd5b34801561005257600080fd5b506100b1600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803590602001909291905050506100b3565b005b8173ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff167fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef836040518082815260200191505060405180910390a35050505600a165627a7a72305820136dff3039c4b0f03151bf1868a30b9cbdd2e368936019903155461c7c3bab560029",
-        "direct_dependencies": [],
-        "full_dependencies": [],
-        "linkrefs": [],
-        "linkrefs_runtime": [],
+        "devdoc": {
+            "kind": "dev",
+            "methods": {},
+            "version": 1
+        },
+        "bytecode": "0x608060405234801561001057600080fd5b50610178806100206000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c8063243f91301461003b578063a6e4915414610045575b600080fd5b610043610058565b005b6100436100533660046100fe565b610092565b7f9d2e69f9500d7a074ad90c8754ebc9ada42f70a2ce0d3cfb9c6cfb72933ed3fa602a6040516100889190610139565b60405180910390a1565b816001600160a01b0316836001600160a01b03167fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef836040516100d59190610139565b60405180910390a3505050565b80356001600160a01b03811681146100f957600080fd5b919050565b600080600060608486031215610112578283fd5b61011b846100e2565b9250610129602085016100e2565b9150604084013590509250925092565b9081526020019056fea26469706673582212209d4a2a4d9826b3b917bcb0f0cd8829196ba4ab98456ac5141d542e0a3c60abb064736f6c63430008000033",
+        "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100365760003560e01c8063243f91301461003b578063a6e4915414610045575b600080fd5b610043610058565b005b6100436100533660046100fe565b610092565b7f9d2e69f9500d7a074ad90c8754ebc9ada42f70a2ce0d3cfb9c6cfb72933ed3fa602a6040516100889190610139565b60405180910390a1565b816001600160a01b0316836001600160a01b03167fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef836040516100d59190610139565b60405180910390a3505050565b80356001600160a01b03811681146100f957600080fd5b919050565b600080600060608486031215610112578283fd5b61011b846100e2565b9250610129602085016100e2565b9150604084013590509250925092565b9081526020019056fea26469706673582212209d4a2a4d9826b3b917bcb0f0cd8829196ba4ab98456ac5141d542e0a3c60abb064736f6c63430008000033",
         "metadata": {
             "compiler": {
-                "version": "0.4.23+commit.124ca40d"
+                "version": "0.8.0+commit.c7dfd78e"
             },
             "language": "Solidity",
             "output": {
                 "abi": [
                     {
-                        "constant": false,
-                        "inputs": [
-                            {
-                                "name": "_from",
-                                "type": "address"
-                            },
-                            {
-                                "name": "_to",
-                                "type": "address"
-                            },
-                            {
-                                "name": "_value",
-                                "type": "uint256"
-                            }
-                        ],
-                        "name": "makeTransfer",
-                        "outputs": [],
-                        "payable": false,
-                        "stateMutability": "nonpayable",
-                        "type": "function"
-                    },
-                    {
                         "inputs": [],
-                        "payable": false,
                         "stateMutability": "nonpayable",
                         "type": "constructor"
                     },
@@ -98,55 +86,111 @@
                         "inputs": [
                             {
                                 "indexed": true,
+                                "internalType": "address",
                                 "name": "_from",
                                 "type": "address"
                             },
                             {
                                 "indexed": true,
+                                "internalType": "address",
                                 "name": "_to",
                                 "type": "address"
                             },
                             {
                                 "indexed": false,
+                                "internalType": "uint256",
                                 "name": "_value",
                                 "type": "uint256"
                             }
                         ],
                         "name": "Transfer",
                         "type": "event"
+                    },
+                    {
+                        "anonymous": false,
+                        "inputs": [
+                            {
+                                "indexed": false,
+                                "internalType": "int256",
+                                "name": "_value",
+                                "type": "int256"
+                            }
+                        ],
+                        "name": "UnknownAbiEvent",
+                        "type": "event"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "emitUnknownAbiEvent",
+                        "outputs": [],
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [
+                            {
+                                "internalType": "address",
+                                "name": "_from",
+                                "type": "address"
+                            },
+                            {
+                                "internalType": "address",
+                                "name": "_to",
+                                "type": "address"
+                            },
+                            {
+                                "internalType": "uint256",
+                                "name": "_value",
+                                "type": "uint256"
+                            }
+                        ],
+                        "name": "makeTransfer",
+                        "outputs": [],
+                        "stateMutability": "nonpayable",
+                        "type": "function"
                     }
                 ],
                 "devdoc": {
-                    "methods": {}
+                    "kind": "dev",
+                    "methods": {},
+                    "version": 1
                 },
                 "userdoc": {
-                    "methods": {}
+                    "kind": "user",
+                    "methods": {},
+                    "version": 1
                 }
             },
             "settings": {
                 "compilationTarget": {
                     "contracts/CurrencyNetwork.sol": "CurrencyNetwork"
                 },
-                "evmVersion": "byzantium",
+                "evmVersion": "petersburg",
                 "libraries": {},
+                "metadata": {
+                    "bytecodeHash": "ipfs"
+                },
                 "optimizer": {
-                    "enabled": false,
-                    "runs": 200
+                    "enabled": true,
+                    "runs": 500
                 },
                 "remappings": []
             },
             "sources": {
                 "contracts/CurrencyNetwork.sol": {
-                    "keccak256": "0xf0ad1ac30d23d48fa5383f2528d8ed0519dd26ddde4f72d6d97ac8221a9a8cc4",
+                    "keccak256": "0x063e66078738223b45f9b498876f8a624c9189fe01ddd39029c5604343dcd69f",
                     "urls": [
-                        "bzzr://5d5873835f23d1af58be9d1b6a2ddb2beeecc20e4cf0ee196caef51ddb72fd5c"
+                        "bzz-raw://f04db38dbee34289ea5bcb16a053cd8f5a0bd383f1ad00ae1f819a4fad0a9a92",
+                        "dweb:/ipfs/QmfWvzNiwD9c2XgAe3CQrsCBJPuJ1TkBeQdFvwDNRKsowQ"
                     ]
                 }
             },
             "version": 1
         },
-        "name": "CurrencyNetwork",
-        "ordered_full_dependencies": [],
-        "source_path": "contracts/CurrencyNetwork.sol"
+        "userdoc": {
+            "kind": "user",
+            "methods": {},
+            "version": 1
+        }
     }
 }

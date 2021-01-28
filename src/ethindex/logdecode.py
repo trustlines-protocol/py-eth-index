@@ -7,12 +7,15 @@ explanation.
 """
 
 import itertools
+import logging
 from typing import Any, Dict, List, Optional
 
 import attr
 import eth_abi
 import eth_utils
 import hexbytes
+
+logger = logging.getLogger(__name__)
 
 
 def replace_with_checksum_address(values: List[Any], types: List[str]) -> List[Any]:
@@ -155,10 +158,19 @@ class TopicIndex:
     def get_abi_for_log(self, log):
         return self.address_topic2event_abi.get((log["address"], log["topics"][0]))
 
-    def decode_log(self, log) -> Event:
+    def decode_logs(self, logs) -> List[Event]:
+        decoded_logs = []
+        for log in logs:
+            decoded_log = self.decode_log(log)
+            if decoded_log is not None:
+                decoded_logs.append(decoded_log)
+        return decoded_logs
+
+    def decode_log(self, log) -> Optional[Event]:
         abi = self.get_abi_for_log(log)
         if abi is None:
-            raise RuntimeError("Could not find ABI for log %s", log)
+            logger.warning(f"Could not find abi for log {log}")
+            return None
 
         args = dict(
             itertools.chain(

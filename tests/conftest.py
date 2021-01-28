@@ -150,6 +150,10 @@ class EventEmitter:
             ).transact()
             self.value += 1
 
+    def add_unknown_abi_events(self):
+        for contract in self.testenv.contracts:
+            contract.functions.emitUnknownAbiEvent().transact()
+
 
 @pytest.fixture
 def event_emitter(testenv):

@@ -49,10 +49,8 @@ def get_logs(web3, addresses, fromBlock, toBlock):
 
 
 def get_events(web3, topic_index, fromBlock, toBlock) -> Iterable[logdecode.Event]:
-    return [
-        topic_index.decode_log(x)
-        for x in get_logs(web3, topic_index.addresses, fromBlock, toBlock)
-    ]
+    logs = get_logs(web3, topic_index.addresses, fromBlock, toBlock)
+    return topic_index.decode_logs(logs)
 
 
 def hexlify(d):

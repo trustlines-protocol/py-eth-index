@@ -1,6 +1,11 @@
 ==========
 Change Log
 ==========
+`unreleased`_
+---------------------
+- Changed: no longer raiser RuntimeError when receiving an event of unknown abi but log a warning.
+  This is useful for proxied contracts that may emit events related to the proxy administration.
+
 `0.3.4`_ (2020-12-18)
 ---------------------
 - Use events from database to figure out sent events to relay instead of memory.
@@ -51,3 +56,4 @@ Change Log
 .. _0.3.2: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.1...0.3.2
 .. _0.3.3: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.2...0.3.3
 .. _0.3.4: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.3...0.3.4
+.. _unreleased: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.4...master

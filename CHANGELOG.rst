@@ -5,6 +5,8 @@ Change Log
 ---------------------
 - Changed: no longer raiser RuntimeError when receiving an event of unknown abi but log a warning.
   This is useful for proxied contracts that may emit events related to the proxy administration.
+- Changed: createtable will warn if table already exists instead of crashing.
+  This allow to upgrade ethindex from versions where the graphfeed table did not exist to ones where it does.
 
 `0.3.4`_ (2020-12-18)
 ---------------------

@@ -584,9 +584,11 @@ def importabi(addresses, contracts):
 def do_createtables(conn):
     with conn:
         with conn.cursor() as cur:
+            for table_name in ("events", "sync", "abis", "graphfeed"):
+                warn_if_table_exists(cur, table_name)
             cur.execute(
                 """
-                  CREATE TABLE events (
+                  CREATE TABLE IF NOT EXISTS events (
                     transactionHash TEXT NOT NULL,
                     blockNumber INTEGER NOT NULL,
                     address TEXT NOT NULL,
@@ -599,7 +601,7 @@ def do_createtables(conn):
                     PRIMARY KEY(transactionHash, address, blockHash, transactionIndex, logIndex)
                   );
 
-                  CREATE TABLE sync (
+                  CREATE TABLE IF NOT EXISTS sync (
                     syncid TEXT NOT NULL PRIMARY KEY,
                     last_block_number INTEGER NOT NULL,
                     addresses TEXT[] NOT NULL,
@@ -607,12 +609,12 @@ def do_createtables(conn):
                     latest_block_hash TEXT NOT NULL
                   );
 
-                  CREATE TABLE abis (
+                  CREATE TABLE IF NOT EXISTS abis (
                     contract_address TEXT NOT NULL PRIMARY KEY,
                     abi JSONB NOT NULL
                   );
 
-                  CREATE TABLE graphfeed (
+                  CREATE TABLE IF NOT EXISTS graphfeed (
                     address TEXT NOT NULL,
                     eventName TEXT NOT NULL,
                     args JSONB,
@@ -621,6 +623,20 @@ def do_createtables(conn):
                   );
                   """
             )
+
+
+def warn_if_table_exists(cur, table_name):
+    cur.execute(
+        """
+            SELECT to_regclass(%s);
+        """,
+        (table_name,),
+    )
+    table_exists = cur.fetchone()["to_regclass"] == table_name
+    if table_exists:
+        logger.warning(
+            f"Table {table_name} already exists, drop the tables first if you wish to recreate"
+        )
 
 
 @click.command()

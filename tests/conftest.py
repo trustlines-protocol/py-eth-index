@@ -97,7 +97,7 @@ def testenv(
     web3 = Web3(EthereumTesterProvider(ethereum_tester))
     web3.eth.defaultAccount = web3.eth.accounts[0]
 
-    contract_interface = compiled_contracts["CurrencyNetwork"]
+    contract_interface = compiled_contracts["CurrencyNetworkOwnable"]
     contract_addresses = [deploy_contract(web3, contract_interface) for i in range(3)]
     currency_networks = [
         web3.eth.contract(address=contract_address, abi=contract_interface["abi"])

@@ -1,5 +1,5 @@
 {
-    "CurrencyNetwork": {
+    "CurrencyNetworkOwnable": {
         "abi": [
             {
                 "inputs": [],

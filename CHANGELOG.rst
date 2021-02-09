@@ -7,6 +7,11 @@ Change Log
   This is useful for proxied contracts that may emit events related to the proxy administration.
 - Changed: createtable will warn if table already exists instead of crashing.
   This allow to upgrade ethindex from versions where the graphfeed table did not exist to ones where it does.
+- Changed: load abi from `CurrencyNetworkOwnable` instead of `CurrencyNetwork` to have abi about
+  `NetworkUnfreeze` event
+
+- Added: Update the `graphfeed` table with information about network frozen status.
+  The updates have name `NetworkFreeze` or `NetworkUnfreeze`.
 
 `0.3.4`_ (2020-12-18)
 ---------------------

@@ -43,7 +43,7 @@ def build_address_to_abi_dict(
         ]["abi"]
 
     for network in addresses_json["networks"]:
-        add_abi(network, "CurrencyNetwork")
+        add_abi(network, "CurrencyNetworkOwnable")
 
     if "unwEth" in addresses_json:
         add_abi(addresses_json["unwEth"], "UnwEth")

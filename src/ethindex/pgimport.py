@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 
 BALANCE_UPDATE_EVENT_NAME = "BalanceUpdate"
 TRUSTLINE_UPDATE_EVENT_NAME = "TrustlineUpdate"
+NETWORK_FREEZE_EVENT_NAME = "NetworkFreeze"
+NETWORK_UNFREEZE_EVENT_NAME = "NetworkUnfreeze"
 
 
 def topic_index_from_db(conn, addresses=None):
@@ -201,7 +203,15 @@ def delete_events(conn, fromBlock, addresses) -> List[Event]:
 
 def filter_events_for_graph(events):
     return [
-        event for event in events if event.name in ["TrustlineUpdate", "BalanceUpdate"]
+        event
+        for event in events
+        if event.name
+        in [
+            TRUSTLINE_UPDATE_EVENT_NAME,
+            BALANCE_UPDATE_EVENT_NAME,
+            NETWORK_FREEZE_EVENT_NAME,
+            NETWORK_UNFREEZE_EVENT_NAME,
+        ]
     ]
 
 
@@ -235,6 +245,7 @@ def null_replacing_graph_update(event: Event) -> GraphUpdate:
     if event.name == BALANCE_UPDATE_EVENT_NAME:
         null_event_args = copy.deepcopy(event.args)
         null_event_args["_value"] = 0
+        null_event_name = BALANCE_UPDATE_EVENT_NAME
     elif event.name == TRUSTLINE_UPDATE_EVENT_NAME:
         null_event_args = {
             "_creditor": event.args["_creditor"],
@@ -245,13 +256,22 @@ def null_replacing_graph_update(event: Event) -> GraphUpdate:
             "_interestRateReceived": 0,
             "_isFrozen": False,
         }
+        null_event_name = TRUSTLINE_UPDATE_EVENT_NAME
+    elif event.name == NETWORK_FREEZE_EVENT_NAME:
+        null_event_args = {}
+        # To replace a network freeze, we use a network unfreeze
+        null_event_name = NETWORK_UNFREEZE_EVENT_NAME
+    elif event.name == NETWORK_UNFREEZE_EVENT_NAME:
+        null_event_args = {}
+        # To replace a network unfreeze, we use a network freeze
+        null_event_name = NETWORK_FREEZE_EVENT_NAME
     else:
         raise RuntimeError(
             f"Tried to compute empty event of unexpected type {event.name}"
         )
 
     return GraphUpdate(
-        name=event.name,
+        name=null_event_name,
         args=null_event_args,
         address=event.address,
         timestamp=event.timestamp,
@@ -348,6 +368,27 @@ class Synchronizer:
         return graph_updates_to_feed
 
     def find_replacing_graph_update_for_missing(self, event: Event) -> GraphUpdate:
+        if event.name in [NETWORK_FREEZE_EVENT_NAME, NETWORK_UNFREEZE_EVENT_NAME]:
+            # No need to find the previous event in the database, just invert the freeze/unfreeze
+            return null_replacing_graph_update(event)
+
+        elif event.name in [BALANCE_UPDATE_EVENT_NAME, TRUSTLINE_UPDATE_EVENT_NAME]:
+            previous_graph_update = self.find_previous_trustline_graph_update(event)
+            if previous_graph_update is not None:
+                return previous_graph_update
+            return null_replacing_graph_update(event)
+
+        else:
+            raise RuntimeError(
+                f"Tried to find replacing event for event of unexpected type {event.name}"
+            )
+
+    def find_previous_trustline_graph_update(self, event):
+        assert event.name in [
+            BALANCE_UPDATE_EVENT_NAME,
+            TRUSTLINE_UPDATE_EVENT_NAME,
+        ], f"Tried to find previous event for event of unexpected type {event.name}"
+
         query_select = """SELECT transactionHash "transactionHash",
               address,
               eventName "event",
@@ -364,13 +405,9 @@ class Synchronizer:
         if event.name == BALANCE_UPDATE_EVENT_NAME:
             from_ = "_from"
             to = "_to"
-        elif event.name == TRUSTLINE_UPDATE_EVENT_NAME:
+        else:
             from_ = "_creditor"
             to = "_debtor"
-        else:
-            raise RuntimeError(
-                f"Tried to find previous event for event of unexpected type {event.name}"
-            )
 
         query = sql.SQL(
             query_select + "WHERE ((args->>{from_}=%s AND args->>{to}=%s) OR "
@@ -396,7 +433,7 @@ class Synchronizer:
                 if len(rows) == 1:
                     return build_graph_update_from_row(rows[0])
                 else:
-                    return null_replacing_graph_update(event)
+                    return None
 
     def feed_graph_updates(
         self, graph_feed_updates: Iterable[Union[Event, GraphUpdate]]

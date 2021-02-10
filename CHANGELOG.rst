@@ -3,6 +3,9 @@ Change Log
 ==========
 `unreleased`_
 ---------------------
+
+`0.3.5`_ (2021-02-10)
+---------------------
 - Changed: no longer raiser RuntimeError when receiving an event of unknown abi but log a warning.
   This is useful for proxied contracts that may emit events related to the proxy administration.
 - Changed: createtable will warn if table already exists instead of crashing.
@@ -63,4 +66,5 @@ Change Log
 .. _0.3.2: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.1...0.3.2
 .. _0.3.3: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.2...0.3.3
 .. _0.3.4: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.3...0.3.4
-.. _unreleased: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.4...master
+.. _0.3.5: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.4...0.3.5
+.. _unreleased: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.5...master

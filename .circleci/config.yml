@@ -8,7 +8,7 @@ templates:
 executors:
   ubuntu-builder:
     docker:
-      - image: trustlines/builder:master27
+      - image: trustlines/builder:featurelatestpythons52
     working_directory: ~/repo
 
 # define some common commands
@@ -20,7 +20,7 @@ commands:
       - run:
           name: Create python venv
           command: |
-            python3 -m venv venv
+            python3.8 -m venv venv
             venv/bin/pip install -c constraints.txt pip wheel setuptools
 
   config-path:
@@ -66,6 +66,19 @@ jobs:
           root: "~"
           paths:
             - repo
+
+  install-python39:
+    executor: ubuntu-builder
+    steps:
+      - checkout
+      - config-path
+      - create-venv
+      - run:
+          name: Install requirements and package with python
+          command: |
+            venv/bin/pip install -c constraints.txt tox
+            tox -e py39
+
   upload-pypi:
     executor: ubuntu-builder
     steps:
@@ -210,6 +223,10 @@ workflows:
   default:
     jobs:
       - install:
+          filters:
+            <<: *tagged-filter
+
+      - install-python39:
           filters:
             <<: *tagged-filter
 

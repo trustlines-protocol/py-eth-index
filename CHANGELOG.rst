@@ -4,6 +4,12 @@ Change Log
 `unreleased`_
 ---------------------
 
+`0.4.0`_ (2021-03-X)
+---------------------
+- Changed: updated to be comatible with python 3.8 and 3.9
+
+- Removed: no longer support python < 3.8
+
 `0.3.5`_ (2021-02-10)
 ---------------------
 - Changed: no longer raiser RuntimeError when receiving an event of unknown abi but log a warning.
@@ -67,4 +73,5 @@ Change Log
 .. _0.3.3: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.2...0.3.3
 .. _0.3.4: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.3...0.3.4
 .. _0.3.5: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.4...0.3.5
-.. _unreleased: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.5...master
+.. _0.4.0: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.5...0.4.0
+.. _unreleased: https://github.com/trustlines-protocol/py-eth-index/compare/0.4.0...master

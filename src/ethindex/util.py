@@ -1,5 +1,5 @@
-import importlib_metadata
+from importlib.metadata import version
 
 
 def get_version():
-    return importlib_metadata.version("eth-index")
+    return version("eth-index")

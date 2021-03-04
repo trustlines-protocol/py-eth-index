@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def replace_with_checksum_address(values: List[Any], types: List[str]) -> List[Any]:
     """returns a new list of values with addresses replaced with their checksum
-    address """
+    address"""
     return [
         eth_utils.to_checksum_address(value) if _type == "address" else value
         for (value, _type) in zip(values, types)

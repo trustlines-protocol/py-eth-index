@@ -28,6 +28,8 @@ repo and run the folllowing pip command with a fresh virtualenv:
 
     pip install -c constraints.txt  .
 
+.. Note:: On Mac Big Sur - if the installation is failing due to compilation errros, make sure that you use openssl, readline, zlib, sqlite libs from brew and not the one that come bundles with Mac OS. Make sure your **LDFLAGS** and **CPPFLAGS** are properly set. For more info read here: https://github.com/psycopg/psycopg2/issues/1200
+
 Development
 -----------
 

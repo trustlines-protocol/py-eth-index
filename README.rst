@@ -18,7 +18,7 @@ this can be done by running:
 
     apt install libpq-dev
 
-eth-index uses python 3.6 or up. Please make sure you have the required
+eth-index uses python 3.8 or up. Please make sure you have the required
 version installed.
 
 Please checkout the source code from github, cd into the checked out

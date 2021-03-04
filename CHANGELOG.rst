@@ -4,7 +4,7 @@ Change Log
 `unreleased`_
 ---------------------
 
-`0.4.0`_ (2021-03-X)
+`0.4.0`_ (2021-03-04)
 ---------------------
 - Changed: updated to be comatible with python 3.8 and 3.9
 

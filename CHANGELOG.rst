@@ -3,6 +3,8 @@ Change Log
 ==========
 `unreleased`_
 ---------------------
+- By default, direclty load abi from `tlbin` package on command `ethindex importabi`
+  you can still provide option `--contracts <path>` to use custom abi
 
 `0.4.0`_ (2021-03-04)
 ---------------------

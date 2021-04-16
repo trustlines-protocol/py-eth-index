@@ -13,6 +13,7 @@ import psycopg2
 import psycopg2.extras
 from hexbytes import HexBytes
 from psycopg2 import sql
+from tlbin import load_packaged_contracts, load_packaged_merged_abis
 from web3 import Web3
 
 from ethindex import logdecode, util
@@ -583,9 +584,14 @@ def runsync(
             time.sleep(10)
 
 
-def do_importabi(conn, addresses, contracts):
+def do_importabi(conn, addresses, contracts=None):
+    if contracts is None:
+        compiled_contracts_dict = load_packaged_merged_abis()
+        compiled_contracts_dict.update(load_packaged_contracts())
+    else:
+        compiled_contracts_dict = json.load(open(contracts))
     a2abi = logdecode.build_address_to_abi_dict(
-        json.load(open(addresses)), json.load(open(contracts))
+        json.load(open(addresses)), compiled_contracts_dict
     )
     logger.info("importing %s abis", len(a2abi))
     with conn:
@@ -608,7 +614,9 @@ def do_importabi(conn, addresses, contracts):
 )
 @click.option(
     "--contracts",
-    default="./contracts.json",
+    help="Path to the contracts.json file to import the abi. "
+    "By default a packed abi with events from all currency networks version will be imported.",
+    default=None,
     show_default=True,
     type=click.Path(exists=True, dir_okay=False),
 )

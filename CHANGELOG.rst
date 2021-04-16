@@ -5,6 +5,8 @@ Change Log
 ---------------------
 - By default, direclty load abi from `tlbin` package on command `ethindex importabi`
   you can still provide option `--contracts <path>` to use custom abi
+- Command `ethindex importabi` now erases the old abi if an abi for an address was already imported.
+  This allows to rerun the command to update abi without having to drop the table.
 
 `0.4.0`_ (2021-03-04)
 ---------------------

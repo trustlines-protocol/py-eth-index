@@ -600,7 +600,8 @@ def do_importabi(conn, addresses, contracts=None):
                 cur.execute(
                     """INSERT INTO abis (contract_address, abi)
                        VALUES (%s, %s)
-                       ON CONFLICT(contract_address) DO NOTHING""",
+                       ON CONFLICT(contract_address) DO UPDATE SET abi = EXCLUDED.abi
+                    """,
                     (contract_address, json.dumps(abi)),
                 )
 

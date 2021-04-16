@@ -43,14 +43,7 @@ def test_importabi(conn, testenv):
     err = subprocess.call(["ethindex", "createtables"])
     assert err == 0
     err = subprocess.call(
-        [
-            "ethindex",
-            "importabi",
-            "--addresses",
-            testenv.addresses_json_path,
-            "--contracts",
-            testenv.contracts_json_path,
-        ]
+        ["ethindex", "importabi", "--addresses", testenv.addresses_json_path]
     )
     assert err == 0
     with conn.cursor() as cur:

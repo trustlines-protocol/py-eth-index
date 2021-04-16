@@ -50,3 +50,35 @@ def test_importabi(conn, testenv):
         cur.execute("select * from abis")
         abis = cur.fetchall()
         assert len(abis) == len(testenv.contract_addresses)
+
+
+def test_importabi_replaces_abi(conn, testenv):
+    err = subprocess.call(["ethindex", "createtables"])
+    assert err == 0
+    # import default abi
+    subprocess.call(
+        ["ethindex", "importabi", "--addresses", testenv.addresses_json_path]
+    )
+    # import custom test abi
+    err = subprocess.call(
+        [
+            "ethindex",
+            "importabi",
+            "--addresses",
+            testenv.addresses_json_path,
+            "--contracts",
+            testenv.contracts_json_path,
+        ]
+    )
+    assert err == 0
+    with conn.cursor() as cur:
+        cur.execute("select * from abis")
+        abis = cur.fetchall()
+
+    # Look if the test function `emitUnknownAbiEvent` is now in the imported abi
+    found = False
+    for abi in abis[0]["abi"]:
+        if "name" in abi.keys():
+            if abi["name"] == "emitUnknownAbiEvent":
+                found = True
+    assert found

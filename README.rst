@@ -105,11 +105,10 @@ Before importing events into the postgres database, the ABIs must be
 known.
 
 ``ethindex importabi`` can be used to import ABIs into the postgres
-database. By default it reads two json files ``addresses.json`` and
-``contracts.json`` from the current directory and adds them to the abis
-table. These files are the exact files that the relay server also reads.
-Their location can be specified via the ``--addresses`` and
-``-contracts`` command line arguments.
+database. By default it reads the json file ``addresses.json`` from the current directory
+and adds the default abi for currency networks to the abis table.
+A custom abi file can be provided via ``--contracts`` option. The location of the
+``addresses.json`` file can be specified via the ``--addresses`` command line argument.
 
 Usage:
 

@@ -3,6 +3,9 @@ Change Log
 ==========
 `unreleased`_
 ---------------------
+
+`0.4.1`_ (2021-04-27)
+---------------------
 - By default, direclty load abi from `tlbin` package on command `ethindex importabi`
   you can still provide option `--contracts <path>` to use custom abi
 - Command `ethindex importabi` now erases the old abi if an abi for an address was already imported.
@@ -78,4 +81,5 @@ Change Log
 .. _0.3.4: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.3...0.3.4
 .. _0.3.5: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.4...0.3.5
 .. _0.4.0: https://github.com/trustlines-protocol/py-eth-index/compare/0.3.5...0.4.0
-.. _unreleased: https://github.com/trustlines-protocol/py-eth-index/compare/0.4.0...master
+.. _0.4.1: https://github.com/trustlines-protocol/py-eth-index/compare/0.4.0...0.4.1
+.. _unreleased: https://github.com/trustlines-protocol/py-eth-index/compare/0.4.1...master

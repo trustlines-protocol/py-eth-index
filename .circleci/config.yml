@@ -79,6 +79,17 @@ jobs:
             venv/bin/pip install -c constraints.txt tox
             tox -e py39
 
+  check-dist:
+    executor: ubuntu-builder
+    steps:
+      - attach_workspace:
+          at: '~'
+      - config-path
+      - run:
+          name: Twine check
+          command: |
+            twine check dist/*
+
   upload-pypi:
     executor: ubuntu-builder
     steps:
@@ -249,6 +260,12 @@ workflows:
             <<: *tagged-filter
 
       - run-mypy:
+          requires:
+            - install
+          filters:
+            <<: *tagged-filter
+
+      - check-dist:
           requires:
             - install
           filters:
